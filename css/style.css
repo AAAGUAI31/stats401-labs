@@ -1,0 +1,124 @@
+:root {
+    color-scheme: light;
+    font-family: Arial, sans-serif;
+    color: #1f2937;
+    background: #f5f7fb;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 40px 20px;
+}
+
+.page-shell {
+    width: min(100%, 1000px);
+    margin: 0 auto;
+}
+
+.page-header {
+    margin-bottom: 24px;
+}
+
+.eyebrow {
+    margin: 0 0 8px;
+    color: #2563eb;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+}
+
+h1 {
+    margin: 0 0 12px;
+    font-size: clamp(2rem, 5vw, 3.25rem);
+}
+
+h2 {
+    margin-top: 0;
+}
+
+p {
+    line-height: 1.6;
+}
+
+.lab-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 30px 0;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #d1d5db;
+}
+
+.lab-nav a,
+.button-link {
+    padding: 9px 14px;
+    border-radius: 6px;
+    color: #1f2937;
+    background: #e5e7eb;
+    text-decoration: none;
+}
+
+.lab-nav a:hover,
+.lab-nav a:focus-visible
+/* 这个貌似是 tab选择也可以显示 */
+{
+    color: #ffffff;
+    background: #2563eb;
+}
+
+.button-link {
+    display: inline-block;
+    color: #ffffff;
+    background: #2563eb;
+}
+
+.card {
+    padding: 28px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 10px 30px rgb(15 23 42 / 8%);
+}
+
+#chart {
+    margin-top: 24px;
+    overflow-x: auto;
+}
+
+.chart-svg {
+    display: block;
+    width: 100%;
+    min-width: 720px;
+    height: auto;
+}
+
+.bar {
+    fill: #4682b4;
+}
+
+.bar:hover {
+    fill: #2563eb;
+}
+
+.score-label {
+    font-size: 14px;
+    font-weight: 700;
+    fill: #1f2937;
+}
+
+.name-label {
+    font-size: 13px;
+    fill: #4b5563;
+}
+
+.error {
+    color: #b91c1c;
+}
+
+.back-link {
+    display: inline-block;
+    margin-top: 24px;
+}
