@@ -69,6 +69,11 @@ p {
     background: #2563eb;
 }
 
+.lab-nav a.is-current {
+    color: #ffffff;
+    background: #1d4ed8;
+}
+
 .button-link {
     display: inline-block;
     color: #ffffff;
@@ -83,6 +88,10 @@ p {
     box-shadow: 0 10px 30px rgb(15 23 42 / 8%);
 }
 
+.card + .card {
+    margin-top: 24px;
+}
+
 #chart {
     margin-top: 24px;
     overflow-x: auto;
@@ -93,6 +102,72 @@ p {
     width: 100%;
     min-width: 720px;
     height: auto;
+}
+
+.axis-label,
+.legend-title {
+    font-weight: 700;
+    fill: #1f2937;
+}
+
+.legend-item text {
+    font-size: 13px;
+    fill: #374151;
+}
+
+.student-point {
+    cursor: pointer;
+}
+
+.city-point {
+    cursor: pointer;
+    transition: fill-opacity 120ms ease;
+}
+
+.grid line {
+    stroke: #e5e7eb;
+    stroke-dasharray: 3 3;
+}
+
+.grid path {
+    display: none;
+}
+
+.encoding-note {
+    color: #4b5563;
+    font-size: 0.95rem;
+}
+
+.justification {
+    margin-top: 24px;
+}
+
+.justification p {
+    max-width: 78ch;
+    margin-bottom: 0;
+}
+
+.page-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+/* Task 11：提示框脱离文档流，避免遮挡图表布局。 */
+.tooltip {
+    position: absolute;
+    z-index: 10;
+    padding: 8px 10px;
+    color: #111827;
+    background: #ffffff;
+    border: 1px solid #9ca3af;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgb(15 23 42 / 15%);
+    pointer-events: none;
+    opacity: 0;
+    font-size: 14px;
+    line-height: 1.45;
+    transition: opacity 120ms ease;
 }
 
 .bar {

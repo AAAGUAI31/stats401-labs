@@ -1,1 +1,78 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Lab 2</title><link rel="stylesheet" href="../css/style.css"></head><body><main class="page-shell"><section class="card"><h1>Lab 2</h1><p>Lab 2 will be added here.</p><a href="../index.html">Back to home</a></section></main></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 2 Assignment - City Multivariate Visualization</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <main class="page-shell">
+        <header class="page-header">
+            <p class="eyebrow">STATS 401 · LAB 2 ASSIGNMENT</p>
+            <h1>City Population and Temperature</h1>
+            <p>
+                A four-dimensional scatterplot comparing population, temperature,
+                development level, and region across twelve cities.
+            </p>
+        </header>
+
+        <!-- 主导航：Lab 2 当前处于选中状态。 -->
+        <nav class="lab-nav" aria-label="Lab navigation">
+            <a href="../lab1/index.html">Lab 1</a>
+            <a class="is-current" href="index.html" aria-current="page">Lab 2</a>
+            <a href="../lab3/index.html">Lab 3</a>
+            <a href="../lab4/index.html">Lab 4</a>
+            <a href="../lab5/index.html">Lab 5</a>
+            <a href="../lab6/index.html">Lab 6</a>
+            <a href="../lab7/index.html">Lab 7</a>
+            <a href="../lab8/index.html">Lab 8</a>
+            <a href="../lab9/index.html">Lab 9</a>
+            <a href="../lab10/index.html">Lab 10</a>
+        </nav>
+
+        <section class="card" aria-labelledby="visualization-title">
+            <h2 id="visualization-title">Visualization</h2>
+            <p class="encoding-note">
+                Population → x-position · Temperature → y-position ·
+                Development level → size · Region → color
+            </p>
+
+            <!-- D3 会在此容器内创建 SVG 散点图。 -->
+            <div id="chart" aria-label="City multivariate scatterplot"></div>
+
+            <!-- 鼠标悬停数据点时显示城市的所有变量。 -->
+            <div id="tooltip" class="tooltip" role="status" aria-live="polite"></div>
+            <p id="chart-error" class="error" hidden></p>
+        </section>
+
+        <section class="card justification" aria-labelledby="justification-title">
+            <h2 id="justification-title">Design Justification</h2>
+            <p>
+                Population is mapped to the horizontal position because it is a ratio
+                variable with a meaningful zero, and a common linear axis makes city
+                populations easy to compare. Average temperature is mapped to the
+                vertical position because Celsius is an interval variable; position
+                supports accurate comparison of both values and differences. Region is
+                a nominal variable, so color separates North, South, East, and West
+                without implying that one region is greater than another. Development
+                level is ordinal and is represented by point size: Low, Medium, and High
+                use progressively larger circles to communicate their natural order.
+                Together, these mappings help viewers notice relationships between city
+                size and climate while also revealing regional groups and development
+                patterns. A tooltip identifies each city and provides its exact values,
+                while separate color and size legends make all four encodings clear.
+            </p>
+        </section>
+
+        <p class="page-links">
+            <a class="back-link" href="task1-12.html">View Task 1–12 demo</a>
+            <a class="back-link" href="../index.html">Back to home</a>
+        </p>
+    </main>
+
+    <!-- 先加载 D3，再执行本次作业的绘图脚本。 -->
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="assignment2.js"></script>
+</body>
+</html>

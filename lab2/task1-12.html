@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 2 - Multivariate Visualization</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <main class="page-shell">
+        <header class="page-header">
+            <p class="eyebrow">STATS 401 · LAB 2</p>
+            <h1>Multivariate Visualization with D3</h1>
+            <p>此散点图同时展示学习时长、考试成绩、专业和年级四个变量。将鼠标移动到数据点上可查看某位学生的详细信息。</p>
+        </header>
+
+        <!-- Task 3：实验导航栏；当前页面为 Lab 2。 -->
+        <nav class="lab-nav" aria-label="Lab navigation">
+            <a href="../lab1/index.html">Lab 1</a>
+            <a class="is-current" href="index.html" aria-current="page">Lab 2</a>
+            <a href="../lab3/index.html">Lab 3</a>
+            <a href="../lab4/index.html">Lab 4</a>
+            <a href="../lab5/index.html">Lab 5</a>
+            <a href="../lab6/index.html">Lab 6</a>
+            <a href="../lab7/index.html">Lab 7</a>
+            <a href="../lab8/index.html">Lab 8</a>
+            <a href="../lab9/index.html">Lab 9</a>
+            <a href="../lab10/index.html">Lab 10</a>
+        </nav>
+
+        <section class="card">
+            <h2>Student Multivariate Scatterplot</h2>
+            <!-- Task 6–10 的 SVG 图表会由 lab2.js 插入到这里。 -->
+            <div id="chart" aria-label="学生多变量散点图"></div>
+            <!-- Task 11：提示框由 JavaScript 在鼠标悬停时显示。 -->
+            <div id="tooltip" class="tooltip" role="status" aria-live="polite"></div>
+            <p id="chart-error" class="error" hidden></p>
+        </section>
+
+        <p><a class="back-link" href="../index.html">← Back to home</a></p>
+    </main>
+
+    <!-- D3 必须先加载，再加载使用 D3 的 Lab 2 脚本。 -->
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="lab2.js"></script>
+</body>
+</html>
