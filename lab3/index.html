@@ -1,1 +1,99 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Lab 3</title><link rel="stylesheet" href="../css/style.css"></head><body><main class="page-shell"><section class="card"><h1>Lab 3</h1><p>Lab 3 will be added here.</p><a href="../index.html">Back to home</a></section></main></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 3 Assignment - Web Data Acquisition</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <main class="page-shell lab3-page">
+        <header class="page-header">
+            <p class="eyebrow">STATS 401 · LAB 3 ASSIGNMENT</p>
+            <h1>Motorcycle Models, 2023–2025</h1>
+            <p>An interactive view of motorcycle model records acquired from the web with Python.</p>
+        </header>
+
+        <nav class="lab-nav" aria-label="Lab navigation">
+            <a href="../lab1/index.html">Lab 1</a>
+            <a href="../lab2/index.html">Lab 2</a>
+            <a class="is-current" href="index.html" aria-current="page">Lab 3</a>
+            <a href="../lab4/index.html">Lab 4</a>
+            <a href="../lab5/index.html">Lab 5</a>
+            <a href="../lab6/index.html">Lab 6</a>
+            <a href="../lab7/index.html">Lab 7</a>
+            <a href="../lab8/index.html">Lab 8</a>
+            <a href="../lab9/index.html">Lab 9</a>
+            <a href="../lab10/index.html">Lab 10</a>
+        </nav>
+
+        <section class="card dataset-intro" aria-labelledby="dataset-title">
+            <div>
+                <p class="section-kicker">Dataset overview</p>
+                <h2 id="dataset-title">A three-year motorcycle catalogue</h2>
+                <p>
+                    The dataset contains motorcycle models released from 2023 through 2025,
+                    including each model's year, name, rating status, category, engine
+                    displacement, and detail-page link.
+                </p>
+            </div>
+            <dl class="dataset-facts">
+                <div><dt>Source</dt><dd><a href="https://bikez.com/" target="_blank" rel="noopener noreferrer">Bikez.com</a></dd></div>
+                <div><dt>Method</dt><dd>HTML scraping with Python, Requests, and BeautifulSoup</dd></div>
+                <div><dt>Records collected</dt><dd id="record-count">Loading…</dd></div>
+            </dl>
+        </section>
+
+        <section class="summary-grid" aria-label="Dataset summary">
+            <article class="stat-card"><span class="stat-label">2023 models</span><strong class="stat-value" id="count-2023">—</strong></article>
+            <article class="stat-card"><span class="stat-label">2024 models</span><strong class="stat-value" id="count-2024">—</strong></article>
+            <article class="stat-card"><span class="stat-label">2025 models</span><strong class="stat-value" id="count-2025">—</strong></article>
+            <article class="stat-card stat-card-accent"><span class="stat-label">Categories</span><strong class="stat-value" id="category-count">—</strong></article>
+        </section>
+
+
+        <section class="card table-card" aria-labelledby="records-title">
+            <div class="section-heading">
+                <div>
+                    <p class="section-kicker">Explore the records</p>
+                    <h2 id="records-title">Motorcycle data table</h2>
+                </div>
+                <p id="table-status" class="table-status" aria-live="polite">Loading records…</p>
+            </div>
+
+            <div class="table-controls">
+                <label class="control-group control-search">
+                    <span>Search model</span>
+                    <input id="model-search" type="search" placeholder="e.g. Honda, electric…" autocomplete="off">
+                </label>
+                <label class="control-group"><span>Year</span><select id="year-filter"><option value="all">All years</option></select></label>
+                <label class="control-group"><span>Category</span><select id="category-filter"><option value="all">All categories</option></select></label>
+                <label class="control-group">
+                    <span>Rows per page</span>
+                    <select id="page-size"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option></select>
+                </label>
+            </div>
+
+            <div class="table-scroll">
+                <table id="data-table">
+                    <caption class="visually-hidden">Motorcycle model records collected from Bikez.com</caption>
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="pagination" aria-label="Table pagination">
+                <button id="previous-page" type="button">Previous</button>
+                <span id="page-indicator">Page 1 of 1</span>
+                <button id="next-page" type="button">Next</button>
+            </div>
+            <p id="data-error" class="error" hidden></p>
+        </section>
+
+        <p class="page-links"><a class="back-link" href="../index.html">Back to home</a></p>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="lab3.js"></script>
+</body>
+</html>

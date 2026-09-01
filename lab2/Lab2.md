@@ -325,7 +325,7 @@ svg.append("text")
 
 # Task 7 — Draw a Scatterplot
 
-Create one circle per student:
+Create one circle per student: 先把所有值画上去
 
 ```javascript
 svg.selectAll("circle")
@@ -361,7 +361,7 @@ Create a categorical color scale:
 ```javascript
 const colorScale = d3.scaleOrdinal()
     .domain(majors)
-    .range(d3.schemeTableau10);
+    .range(d3.schemeTableau10); 安排颜色
 ```
 
 Then use:
@@ -380,7 +380,7 @@ major → color
 
 # Task 9 — Encode Another Variable with Size
 
-Create an ordinal size scale:
+Create an ordinal size scale: 一个mapping的过程
 
 ```javascript
 const sizeScale = d3.scaleOrdinal()
@@ -843,16 +843,16 @@ Design Justification
 
 # Submission Checklist
 
-- [ ] My Lab 2 page opens successfully through GitHub Pages.
-- [ ] Lab 2 is accessible from the website navigation.
-- [ ] I use the provided `cities_multivariate.csv` dataset.
-- [ ] I load the CSV using D3.
-- [ ] I convert `population` and `temp_c` to numbers.
-- [ ] My visualization represents `population`.
-- [ ] My visualization represents `temp_c`.
-- [ ] My visualization represents `development_level`.
-- [ ] My visualization represents `region`.
-- [ ] The viewer can identify individual cities.
-- [ ] I include a Design Justification below the visualization.
+- [x] My Lab 2 page opens successfully through GitHub Pages.
+- [x] Lab 2 is accessible from the website navigation.
+- [x] I use the provided `cities_multivariate.csv` dataset.
+- [x] I load the CSV using D3.
+- [x] I convert `population` and `temp_c` to numbers.
+- [x] My visualization represents `population`.
+- [x] My visualization represents `temp_c`.
+- [x] My visualization represents `development_level`.
+- [x] My visualization represents `region`.
+- [x] The viewer can identify individual cities.
+- [x] I include a Design Justification below the visualization.
 
 ---
