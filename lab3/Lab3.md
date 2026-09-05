@@ -1279,14 +1279,14 @@ Your Python acquisition script and scraped dataset must also be included in your
 
 # Submission Checklist
 
-- [ ] My final dataset contains at least 1,000 records.
-- [ ] Each record contains at least 3 useful attributes.
-- [ ] My script includes reasonable rate limiting for repeated requests.
-- [ ] My script includes basic error handling.
-- [ ] I saved the acquired data as CSV or JSON.
-- [ ] My Lab 3 webpage loads the acquired dataset.
-- [ ] My webpage explains the source and acquisition method.
-- [ ] My webpage displays the data in a table.
-- [ ] My table is sortable by clicking column headings.
+- [x] My final dataset contains at least 1,000 records.
+- [x] Each record contains at least 3 useful attributes.
+- [x] My script includes reasonable rate limiting for repeated requests.
+- [x] My script includes basic error handling.
+- [x] I saved the acquired data as CSV or JSON.
+- [x] My Lab 3 webpage loads the acquired dataset.
+- [x] My webpage explains the source and acquisition method.
+- [x] My webpage displays the data in a table.
+- [x] My table is sortable by clicking column headings.
 
 ---

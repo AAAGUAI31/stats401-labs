@@ -1,1 +1,64 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Lab 4</title><link rel="stylesheet" href="../css/style.css"></head><body><main class="page-shell"><section class="card"><h1>Lab 4</h1><p>Lab 4 will be added here.</p><a href="../index.html">Back to home</a></section></main></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A D3 comparison of RoBERTa sentiment in customer and support tweets.">
+    <title>Lab 4 Assignment - Cleaning Web Data</title>
+    <link rel="stylesheet" href="../css/style.css?v=lab4-1">
+</head>
+<body>
+    <main class="page-shell lab4-page">
+        <header class="page-header lab4-header">
+            <p class="eyebrow">STATS 401 · LAB 4 ASSIGNMENT</p>
+            <h1>Whose tone is more positive?</h1>
+            <p class="header-summary">Cleaning 5,000 real customer-service tweets and comparing customer and support sentiment with Twitter-RoBERTa.</p>
+        </header>
+
+        <nav class="lab-nav" aria-label="Lab navigation">
+            <a href="../lab1/index.html">Lab 1</a><a href="../lab2/index.html">Lab 2</a>
+            <a href="../lab3/index.html">Lab 3</a><a class="is-current" href="index.html" aria-current="page">Lab 4</a>
+            <a href="../lab5/index.html">Lab 5</a><a href="../lab6/index.html">Lab 6</a>
+            <a href="../lab7/index.html">Lab 7</a><a href="../lab8/index.html">Lab 8</a>
+            <a href="../lab9/index.html">Lab 9</a><a href="../lab10/index.html">Lab 10</a>
+        </nav>
+
+        <section class="lab4-overview" aria-label="Dataset summary">
+            <article class="lab4-source-card">
+                <p class="section-kicker">Dataset</p>
+                <h2>Customer Support on Twitter</h2>
+                <p>A reproducible, balanced sample of anonymized conversations between customers and company support accounts.</p>
+                <a href="https://www.kaggle.com/datasets/thoughtvector/customer-support-on-twitter" target="_blank" rel="noopener noreferrer">View source dataset ↗</a>
+                <p class="license-note">CC BY-NC-SA 4.0 · non-commercial course use</p>
+            </article>
+            <div class="lab4-metrics">
+                <article class="lab4-metric"><span>Clean tweets</span><strong id="clean-count">—</strong></article>
+                <article class="lab4-metric"><span>Customer tweets</span><strong id="customer-count">—</strong></article>
+                <article class="lab4-metric"><span>Support tweets</span><strong id="support-count">—</strong></article>
+                <article class="lab4-metric lab4-metric-score"><span>Model</span><strong>RoBERTa</strong></article>
+            </div>
+        </section>
+
+        <section class="card lab4-chart-card" aria-labelledby="sentiment-title">
+            <div class="section-heading lab4-chart-heading">
+                <div><p class="section-kicker">Sentiment × author type</p><h2 id="sentiment-title">Distribution of predicted sentiment</h2></div>
+                <p class="chart-note">Each bar totals 100% of its author group.</p>
+            </div>
+            <div class="sentiment-legend" aria-label="Sentiment color legend"></div>
+            <div id="sentiment-chart" class="sentiment-chart" aria-live="polite"></div>
+            <p id="chart-status" class="chart-status">Loading sentiment data…</p>
+            <div id="lab4-tooltip" class="lab4-tooltip" role="tooltip" aria-hidden="true"></div>
+        </section>
+
+        <section class="card lab4-analysis" aria-labelledby="analysis-title">
+            <p class="section-kicker">Short analysis</p>
+            <h2 id="analysis-title">What the comparison shows</h2>
+            <p id="analysis-copy">This project uses Customer Support on Twitter, a public corpus of exchanges between consumers and company support accounts. I selected a reproducible, balanced sample of 5,000 tweets: 2,500 inbound customer messages and 2,500 outbound support replies. The cleaning script checks missing values and data types, removes duplicate IDs and unusable text or dates, standardizes whitespace, parses timestamps, and converts the inbound field into Customer and Support categories. Usernames and URLs are lightly normalized before every message is evaluated by the RoBERTa model. Sentiment score is defined as the positive probability minus the negative probability. The chart uses one 100% stacked bar per author type; segment length represents the within-group share predicted Negative, Neutral, or Positive. <span id="observed-pattern">Negative is the largest customer category (49.2%), while Neutral is largest among support replies (58.2%). Support has a higher mean sentiment score (+0.160) than customers (−0.267).</span> These outputs are model-generated estimates rather than ground-truth labels, so sarcasm, ambiguity, slang, and scripted support language can still be misclassified.</p>
+        </section>
+
+        <p class="page-links"><a class="back-link" href="../index.html">Back to home</a></p>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="lab4.js"></script>
+</body>
+</html>

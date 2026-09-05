@@ -1,0 +1,6 @@
+/.venv/
+/.uv-cache/
+/data/archive/
+/data/twcs_source.zip
+**/__pycache__/
+/lab4_sentiment_*/

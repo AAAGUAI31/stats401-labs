@@ -1,0 +1,7 @@
+author_type,sentiment,count,average_score,share
+Customer,Negative,1229,-0.79210644,0.49160000
+Customer,Neutral,886,-0.01176798,0.35440000
+Customer,Positive,385,0.82354921,0.15400000
+Support,Negative,362,-0.66545232,0.14480000
+Support,Neutral,1456,0.07218366,0.58240000
+Support,Positive,682,0.78526034,0.27280000
