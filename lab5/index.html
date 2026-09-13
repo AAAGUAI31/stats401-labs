@@ -1,1 +1,298 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Lab 5</title><link rel="stylesheet" href="../css/style.css"></head><body><main class="page-shell"><section class="card"><h1>Lab 5</h1><p>Lab 5 will be added here.</p><a href="../index.html">Back to home</a></section></main></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 5: Urban Transit Network Visualization</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        :root {
+            --ink: #172033;
+            --muted: #5f6b7a;
+            --line: #dce3ec;
+            --paper: #ffffff;
+            --page: #f4f7fb;
+            --accent: #234a7c;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            color: var(--ink);
+            background: var(--page);
+            font-family: Inter, Arial, "Microsoft YaHei", sans-serif;
+            line-height: 1.55;
+        }
+
+        .lab-shell {
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 34px 0 56px;
+        }
+
+        .hero,
+        .lab-card {
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            box-shadow: 0 8px 28px rgba(28, 45, 72, 0.07);
+        }
+
+        .hero {
+            padding: 34px clamp(24px, 5vw, 56px);
+            border-top: 5px solid var(--accent);
+        }
+
+        .eyebrow {
+            margin: 0 0 6px;
+            color: var(--accent);
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        h1 { margin: 0; font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.1; }
+        h2 { margin: 0 0 8px; font-size: clamp(1.45rem, 3vw, 2rem); }
+        h3 { margin: 20px 0 8px; }
+        p { margin: 8px 0; }
+
+        .subtitle,
+        .section-note { color: var(--muted); }
+
+        .meta-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .meta-list span {
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: #eaf1f9;
+            color: #24466d;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .lab-card {
+            margin-top: 24px;
+            padding: clamp(20px, 4vw, 34px);
+            overflow-x: auto;
+        }
+
+        .viz-wrap {
+            min-height: 220px;
+            margin-top: 18px;
+            border: 1px solid #e3e8ef;
+            border-radius: 10px;
+            background: #fbfcfe;
+        }
+
+        svg {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .station-node { cursor: grab; }
+        .station-node:active { cursor: grabbing; }
+        .station-node text { pointer-events: none; }
+        .route { cursor: pointer; }
+        .legend text,
+        .matrix-label,
+        .district-label { font-family: inherit; }
+
+        .encoding-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .encoding-item {
+            padding: 14px 16px;
+            background: #f6f8fb;
+            border-left: 4px solid #8aa6c8;
+            border-radius: 6px;
+        }
+
+        .encoding-item strong { display: block; color: #24466d; }
+
+        .findings {
+            width: 100%;
+            margin-top: 18px;
+            border-collapse: collapse;
+            font-size: 0.94rem;
+        }
+
+        .findings th,
+        .findings td {
+            padding: 13px 14px;
+            text-align: left;
+            vertical-align: top;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .findings th {
+            color: #27415f;
+            background: #eef3f8;
+        }
+
+        .findings tbody tr:hover { background: #f8fafc; }
+
+        .status {
+            margin: 16px 0 0;
+            padding: 11px 13px;
+            color: #334155;
+            background: #eef3f8;
+            border-radius: 7px;
+        }
+
+        .status.error { color: #991b1b; background: #fee2e2; }
+
+        .tooltip {
+            position: absolute;
+            z-index: 20;
+            max-width: 270px;
+            padding: 9px 12px;
+            opacity: 0;
+            pointer-events: none;
+            color: #fff;
+            background: rgba(20, 28, 40, 0.95);
+            border-radius: 7px;
+            font-size: 0.84rem;
+            line-height: 1.55;
+            box-shadow: 0 5px 18px rgba(0, 0, 0, 0.24);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 24px;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        @media (max-width: 700px) {
+            .lab-shell { width: min(100% - 20px, 1180px); padding-top: 18px; }
+            .hero, .lab-card { border-radius: 10px; }
+            .findings { min-width: 760px; }
+        }
+    </style>
+</head>
+<body>
+    <main class="lab-shell">
+        <!-- 1. Dataset Description -->
+        <header class="hero">
+            <p class="eyebrow">STATS 401 · Lab 5 Assignment</p>
+            <h1>Two Views of an Urban Transit Network</h1>
+            <p class="subtitle">
+                This page presents the same synthetic urban transit data as a force-directed node-link diagram
+                and an adjacency matrix. The network is undirected, and each edge represents a direct connection between two stations.
+            </p>
+            <div class="meta-list" aria-label="Dataset summary">
+                <span>50 stations</span>
+                <span>50 direct connections</span>
+                <span>5 districts</span>
+                <span>3 route types</span>
+            </div>
+            <div id="load-status" class="status" role="status" aria-live="polite">Loading data and visualizations...</div>
+        </header>
+
+        <!-- 2. Node-Link Visualization -->
+        <section class="lab-card" aria-labelledby="network-heading">
+            <h2 id="network-heading">1. Node-Link Visualization</h2>
+            <p class="section-note">Drag stations to adjust the layout. Hover over a station or route to view details and highlight related connections.</p>
+            <div id="network" class="viz-wrap"></div>
+
+            <!-- 3. Node-Link Design Description -->
+            <h3>Node-Link Design Description</h3>
+            <p>
+                Node color distinguishes districts, making cross-district connections easy to see. Node area represents daily passenger volume,
+                while circles, squares, and triangles identify Local, Transfer, and Terminal stations without relying on color alone.
+                Route color distinguishes Metro, Express, and Shuttle service, and line width represents direct travel time, with wider edges indicating longer trips.
+                Labels identify stations, while dragging, neighbor highlighting, and tooltips reduce clutter when all 50 nodes are visible.
+            </p>
+            <div class="encoding-grid" aria-label="Node-link visual encodings">
+                <div class="encoding-item"><strong>Node color</strong>District</div>
+                <div class="encoding-item"><strong>Node area</strong>Daily passengers</div>
+                <div class="encoding-item"><strong>Node shape</strong>Station type</div>
+                <div class="encoding-item"><strong>Route color</strong>Route type</div>
+                <div class="encoding-item"><strong>Route width</strong>Travel time</div>
+            </div>
+        </section>
+
+        <!-- 4. Adjacency Matrix -->
+        <section class="lab-card" aria-labelledby="matrix-heading">
+            <h2 id="matrix-heading">2. Adjacency Matrix</h2>
+            <p class="section-note">Hover over a cell to highlight its row and column and inspect connection, route type, and travel-time details.</p>
+            <div id="matrix" class="viz-wrap"></div>
+
+            <!-- 5. Matrix Design Description -->
+            <h3>Matrix Design Description</h3>
+            <p>
+                Rows and columns both represent stations, and a colored cell indicates a direct connection. Cell color preserves route type,
+                while opacity represents travel time. Stations are ordered first by district and then by station type, so each district forms a continuous block;
+                axis-label colors also encode district. This ordering helps reveal within- and cross-district links, although paths are less intuitive than in the node-link view.
+                Hover highlighting supports precise lookup of individual station pairs.
+            </p>
+        </section>
+
+        <!-- 6. Network Questions and Findings -->
+        <section class="lab-card" aria-labelledby="findings-heading">
+            <h2 id="findings-heading">3. Network Questions and Findings</h2>
+            <p class="section-note">Each finding is based on the visual encodings and interactions above. The rating also indicates how well the selected view supports the question.</p>
+            <table class="findings">
+                <thead>
+                    <tr>
+                        <th scope="col">Question</th>
+                        <th scope="col">Answerability and View</th>
+                        <th scope="col">Visual Evidence and Observation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1. Which stations appear central in the network?</td>
+                        <td>Well · Both views</td>
+                        <td>Node positions and hover highlighting, together with filled matrix cells, show that s4, s7, s10, s13, s16, s18, s21, s23, s25, s29, s31, s33, s34, and s38 each have three direct links—the highest degree in this network.</td>
+                    </tr>
+                    <tr>
+                        <td>2. Which districts are strongly connected?</td>
+                        <td>Well · Adjacency matrix</td>
+                        <td>District-ordered blocks show that South–East is the densest pairing with 11 direct links. Central–North and East–West follow with nine links each.</td>
+                    </tr>
+                    <tr>
+                        <td>3. Where are Transfer and Terminal stations located?</td>
+                        <td>Partially · Node-link</td>
+                        <td>Node shapes show that several Terminal stations sit at shortcut endpoints and form degree-three hubs, including s4, s7, s10, s13, s16, s25, s30,s33 and s34. Transfer stations are more dispersed and include the outer branch endpoints s41, s44, s47, and s50.</td>
+                    </tr>
+                    <tr>
+                        <td>4. Which stations have high passenger volume?</td>
+                        <td>Well · Node-link</td>
+                        <td>Node area shows that s46–s50 are the five largest stations, with s50 the largest. High volume does not necessarily imply topological centrality: s46, s48, and s49 have no direct links.</td>
+                    </tr>
+                    <tr>
+                        <td>5. Where are the longest direct connections?</td>
+                        <td>Well · Both views</td>
+                        <td>The widest edges and most opaque matrix cells identify s7–s31 as the longest connection at 16 minutes, followed by s18–s34 at 15 minutes and s29–s50 at 14 minutes.</td>
+                    </tr>
+                    <tr>
+                        <td>6. Are route types concentrated in particular areas?</td>
+                        <td>Partially · Both views</td>
+                        <td>Route colors alternate along the main chain and cross-district shortcuts, with no strong local concentration. Counts are also nearly balanced: 17 Express, 17 Shuttle, and 16 Metro links.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <a class="back-link" href="../index.html">← Back to Course Home</a>
+    </main>
+
+    <div id="tooltip" class="tooltip" role="tooltip"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="lab5.js"></script>
+</body>
+</html>

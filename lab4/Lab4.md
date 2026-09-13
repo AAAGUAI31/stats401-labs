@@ -1145,7 +1145,7 @@ Your Python cleaning/analysis script should also be included in your GitHub repo
 - [x] My tweet dataset contains at least 1,000 records.
 - [x] I clean and process tweet dataset.
 - [x] I calculate sentiment for each tweet.
-- [ ] My visualization shows sentiment and at least one other tweet attribute.
+- [x] My visualization shows sentiment and at least one other tweet attribute.
 - [x] I include a 100–200 word analysis below the visualization.
 - [x] My Python cleaning script is included in the repository.
 - [x] My page works correctly after deployment.

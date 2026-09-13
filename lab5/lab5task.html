@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 5：交互式网络可视化演示</title>
+    <style>
+        :root {
+            color-scheme: light;
+            font-family: Arial, "Microsoft YaHei", sans-serif;
+            color: #243042;
+            background: #f5f7fb;
+        }
+
+        body {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 28px 20px 48px;
+        }
+
+        h1 { margin-bottom: 8px; }
+        h2 { margin-top: 0; }
+        .intro { color: #5c6678; }
+
+        .panel {
+            margin-top: 24px;
+            padding: 22px;
+            overflow-x: auto;
+            background: #fff;
+            border: 1px solid #dfe4ec;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(31, 45, 61, 0.06);
+        }
+
+        svg {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin: 0 auto;
+        }
+
+        .node { cursor: grab; }
+        .node:active { cursor: grabbing; }
+        .labels text { pointer-events: none; }
+        .legend text,
+        .matrix-label { fill: #374151; font-size: 12px; }
+
+        .tooltip {
+            position: absolute;
+            z-index: 10;
+            max-width: 240px;
+            padding: 9px 12px;
+            opacity: 0;
+            pointer-events: none;
+            background: rgba(24, 31, 42, 0.94);
+            color: white;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.55;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+            transition: opacity 100ms ease;
+        }
+
+        #status {
+            margin-top: 16px;
+            padding: 10px 12px;
+            display: none;
+            color: #991b1b;
+            background: #fee2e2;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lab 5：交互式网络可视化</h1>
+    <p class="intro">
+        节点大小表示活动次数，节点颜色表示所属组别；连线宽度表示关系强度，连线颜色表示关系类型。
+        可拖动节点，或将鼠标移到节点和矩阵单元格上查看细节。
+    </p>
+
+    <main>
+        <section class="panel" aria-labelledby="network-title">
+            <h2 id="network-title">1. 力导向节点—连线图</h2>
+            <div id="chart"></div>
+        </section>
+
+        <section class="panel" aria-labelledby="matrix-title">
+            <h2 id="matrix-title">2. 邻接矩阵</h2>
+            <div id="matrix"></div>
+        </section>
+    </main>
+
+    <div id="status" role="alert"></div>
+    <div id="tooltip" class="tooltip" role="tooltip"></div>
+
+    <!-- 先加载 D3，再加载本页脚本。通过本地服务器打开本文件。 -->
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="lab5task.js"></script>
+</body>
+</html>
