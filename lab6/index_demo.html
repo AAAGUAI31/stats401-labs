@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lab 6 演示：层级数据可视化</title>
+  <style>
+    :root { --ink:#172033; --muted:#667085; --line:#d9e1ec; --panel:#fff; --bg:#f5f7fb; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family:Inter,"Microsoft YaHei",Arial,sans-serif; }
+    main { max-width:1480px; margin:0 auto; padding:34px 24px 48px; }
+    h1 { margin:0 0 8px; font-size:30px; }
+    h2 { margin:0; font-size:20px; }
+    p { color:var(--muted); line-height:1.6; }
+    .intro { max-width:900px; margin:0 0 24px; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    .panel { min-width:0; overflow:hidden; background:var(--panel); border:1px solid var(--line); border-radius:14px; box-shadow:0 4px 14px rgba(20,36,64,.06); }
+    .panel-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 20px 12px; border-bottom:1px solid #eef1f6; }
+    .panel-header p { margin:4px 0 0; font-size:14px; }
+    .chart { padding:12px; overflow:auto; }
+    svg { display:block; font-size:12px; }
+    .link { fill:none; stroke:#b8c2d1; stroke-width:1.4; }
+    .node circle { stroke:#fff; stroke-width:2; }
+    .node text { paint-order:stroke; stroke:#fff; stroke-width:3px; stroke-linejoin:round; }
+    button, select { border:1px solid #cfd7e5; border-radius:7px; background:#fff; color:var(--ink); padding:7px 9px; font:inherit; cursor:pointer; }
+    button:hover, select:hover { border-color:#697a99; }
+    .controls { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .legend { display:flex; gap:13px; flex-wrap:wrap; padding:0 20px 16px; color:var(--muted); font-size:13px; }
+    .legend-item { display:flex; align-items:center; gap:5px; }
+    .swatch { width:12px; height:12px; border-radius:2px; }
+    .tooltip { position:fixed; z-index:10; max-width:230px; opacity:0; pointer-events:none; background:rgba(24,33,50,.96); color:#fff; border-radius:7px; padding:9px 11px; font-size:13px; line-height:1.55; transition:opacity .12s; box-shadow:0 4px 16px rgba(0,0,0,.2); }
+    .breadcrumb { padding:0 20px 12px; color:#475467; font-size:13px; min-height:32px; }
+    .breadcrumb button { padding:2px 5px; margin-left:8px; font-size:12px; }
+    .error { padding:18px; color:#a12a2a; background:#fff0f0; border-radius:8px; }
+    @media (max-width:1000px) { .grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Lab 6：层级数据可视化演示</h1>
+    <p class="intro">数据由 CSV 转换而来的层级 JSON 提供。树图强调父子关系；Treemap 用面积表示城市人口（千人）、用颜色表示洲别。点击树节点可折叠分支；点击 Treemap 中的任意分组可放大，并可返回上一级。</p>
+    <div class="grid">
+      <section class="panel">
+        <div class="panel-header"><div><h2>Node-link Tree</h2><p>点击蓝色或紫色节点以展开／折叠。</p></div><button id="reset-tree" type="button">展开全部</button></div>
+        <div id="tree" class="chart"></div>
+      </section>
+      <section class="panel">
+        <div class="panel-header"><div><h2>Treemap</h2><p>面积 = 人口；颜色 = 洲别。</p></div><div class="controls"><label for="tiling">切分：</label><select id="tiling"><option value="squarify">Squarify</option><option value="binary">Binary</option><option value="sliceDice">SliceDice</option></select></div></div>
+        <div id="breadcrumb" class="breadcrumb"></div>
+        <div id="treemap" class="chart"></div>
+        <div id="legend" class="legend"></div>
+      </section>
+    </div>
+  </main>
+  <div id="tooltip" class="tooltip"></div>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="lab6.js"></script>
+</body>
+</html>
