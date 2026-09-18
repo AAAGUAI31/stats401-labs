@@ -1,1 +1,131 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Lab 7</title><link rel="stylesheet" href="../css/style.css"></head><body><main class="page-shell"><section class="card"><h1>Lab 7</h1><p>Lab 7 will be added here.</p><a href="../index.html">Back to home</a></section></main></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lab 7 | Temporal Commercial Network</title>
+  <style>
+    :root { --ink:#172033; --muted:#67748a; --line:#dce3ec; --paper:#fff; --bg:#f3f6fa; --accent:#2457d6; --accent-soft:#eaf0ff; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; }
+    main { width:min(1440px,calc(100% - 36px)); margin:auto; padding:34px 0 50px; }
+    a { color:#2457d6; }
+    header { display:grid; grid-template-columns:1fr auto; gap:24px; align-items:end; margin-bottom:20px; }
+    .eyebrow { margin:0 0 7px; color:#42618c; font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+    h1 { margin:0; font-size:clamp(30px,4vw,46px); letter-spacing:-.04em; }
+    .subtitle { max-width:850px; margin:10px 0 0; color:var(--muted); line-height:1.6; }
+    .header-links { display:flex; gap:15px; white-space:nowrap; }
+    .panel { background:var(--paper); border:1px solid var(--line); border-radius:15px; box-shadow:0 6px 20px rgba(18,35,65,.05); }
+    .controls { display:grid; grid-template-columns:auto auto auto 1fr auto; gap:10px; align-items:center; padding:16px 18px; margin-bottom:16px; }
+    button,select,input { font:inherit; }
+    button { min-height:38px; padding:7px 15px; cursor:pointer; border:1px solid var(--accent); border-radius:8px; color:white; background:var(--accent); font-weight:750; }
+    button.secondary { border-color:#cbd5e1; color:#334155; background:white; }
+    button:hover { filter:brightness(.96); }
+    input[type=range] { width:100%; accent-color:var(--accent); }
+    .day-readout { min-width:150px; text-align:right; }
+    .day-readout strong { display:block; font-size:18px; } .day-readout span { color:var(--muted); font-size:13px; }
+    .dashboard { display:grid; grid-template-columns:minmax(0,2.4fr) minmax(270px,.8fr); gap:16px; align-items:start; }
+    .network-panel { overflow:hidden; }
+    .panel-head { display:flex; justify-content:space-between; gap:18px; align-items:start; padding:18px 20px 4px; }
+    h2 { margin:0; font-size:21px; } .panel-head p { margin:5px 0 0; color:var(--muted); font-size:14px; }
+    .metric { display:flex; gap:16px; flex-wrap:wrap; justify-content:flex-end; }
+    .metric div { min-width:90px; } .metric span { display:block; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.06em; }
+    .metric strong { display:block; margin-top:2px; font-size:18px; }
+    #network { min-height:590px; } #network svg,#activity-chart svg { display:block; width:100%; height:auto; }
+    .side { display:grid; gap:16px; }
+    .legend { padding:19px; }
+    .legend h2 { margin-bottom:14px; }
+    .legend h3 { margin:16px 0 8px; color:#43516a; font-size:12px; text-transform:uppercase; letter-spacing:.08em; }
+    .legend-list { display:grid; gap:8px; }
+    .legend-item { display:flex; align-items:center; gap:9px; color:#475569; font-size:13px; }
+    .swatch { flex:0 0 auto; width:13px; height:13px; border-radius:50%; }
+    .line-swatch { flex:0 0 auto; width:25px; height:4px; border-radius:4px; }
+    .encoding-note { margin:16px 0 0; padding-top:14px; border-top:1px solid var(--line); color:var(--muted); font-size:13px; line-height:1.6; }
+    .activity { padding:18px; } .activity p { margin:5px 0 10px; color:var(--muted); font-size:13px; line-height:1.5; }
+    .analysis { margin-top:22px; }
+    .analysis > p { color:var(--muted); }
+    .question-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    .question { padding:19px 21px; }
+    .question.wide { grid-column:1/-1; }
+    .question .number { display:inline-grid; place-items:center; width:26px; height:26px; margin-bottom:9px; border-radius:50%; color:#1e40af; background:var(--accent-soft); font-size:12px; font-weight:850; }
+    .question h3 { margin:0 0 8px; font-size:16px; line-height:1.35; }
+    .question p { margin:0; color:#526078; font-size:14px; line-height:1.65; }
+    .method { margin-top:16px; padding:18px 21px; color:#526078; font-size:14px; line-height:1.65; }
+    .footer-link { display:inline-block; margin-top:22px; }
+    .tooltip { position:fixed; z-index:20; opacity:0; pointer-events:none; max-width:270px; padding:11px 13px; color:white; background:rgba(17,25,39,.96); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.22); font-size:13px; line-height:1.55; }
+    .tooltip strong { font-size:14px; } .tooltip .muted-tip { color:#cad4e4; }
+    .node-label { fill:#1e293b; font-size:10px; font-weight:700; pointer-events:none; paint-order:stroke; stroke:white; stroke-width:3px; stroke-linejoin:round; }
+    .region-label { fill:#94a3b8; font-size:12px; font-weight:800; letter-spacing:.08em; }
+    .link { stroke-linecap:round; } .node { cursor:grab; } .node:active { cursor:grabbing; }
+    .error { margin:20px; padding:16px; color:#9f1239; background:#fff1f2; border-radius:9px; }
+    @media(max-width:980px) { header,.dashboard { grid-template-columns:1fr; } .header-links { justify-self:start; } .side { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media(max-width:700px) { main { width:min(100% - 20px,1440px); } .controls { grid-template-columns:repeat(3,auto); } .controls input { grid-column:1/-1; grid-row:2; } .day-readout { grid-column:1/-1; text-align:left; } .side,.question-grid { grid-template-columns:1fr; } .question.wide { grid-column:auto; } .panel-head { display:block; } .metric { justify-content:flex-start; margin-top:13px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <p class="eyebrow">STATS 401 · LAB 7 ASSIGNMENT</p>
+        <h1>Temporal Commercial Network</h1>
+        <p class="subtitle">An animated node-link view of fabricated commercial transactions among 12 companies over 60 days. Use the controls to inspect how activity, relationships, and cross-regional connectivity evolve.</p>
+      </div>
+      <nav class="header-links"><a href="task.html">Tutorial demo</a><a href="../index.html">All labs</a></nav>
+    </header>
+
+    <section class="panel controls" aria-label="Animation controls">
+      <button id="play" type="button">Play</button>
+      <button id="pause" class="secondary" type="button">Pause</button>
+      <button id="reset" class="secondary" type="button">Reset</button>
+      <input id="time-slider" type="range" min="1" max="60" step="1" value="1" aria-label="Current day">
+      <div class="day-readout"><strong id="day-label">Day 1</strong><span id="date-label">January 1, 2026</span></div>
+    </section>
+
+    <section class="dashboard">
+      <article class="panel network-panel">
+        <div class="panel-head">
+          <div><h2>Daily transaction network</h2><p>Drag nodes to inspect overlaps. Hover over a company or relationship for exact values.</p></div>
+          <div class="metric" aria-label="Current day summary">
+            <div><span>Active companies</span><strong id="active-count">—</strong></div>
+            <div><span>Active links</span><strong id="link-count">—</strong></div>
+            <div><span>Daily value</span><strong id="total-value">—</strong></div>
+          </div>
+        </div>
+        <div id="network"></div>
+      </article>
+
+      <aside class="side">
+        <section class="panel legend">
+          <h2>Encoding guide</h2>
+          <h3>Node fill · sector</h3><div id="sector-legend" class="legend-list"></div>
+          <h3>Node outline · region</h3><div id="region-legend" class="legend-list"></div>
+          <h3>Link color · transaction type</h3><div id="type-legend" class="legend-list"></div>
+          <p class="encoding-note"><strong>Node size</strong> shows current transaction volume. <strong>Link width</strong> shows amount in USD, and <strong>opacity</strong> shows transaction count. Inactive companies remain faint to preserve the mental map.</p>
+        </section>
+        <section class="panel activity">
+          <h2>60-day connectivity overview</h2>
+          <p>Bar height is the number of active links. The blue marker shows the selected day; click a bar to jump to that date.</p>
+          <div id="activity-chart"></div>
+        </section>
+      </aside>
+    </section>
+
+    <section class="analysis">
+      <h2>Temporal-network findings</h2>
+      <p>The observations below answer the five assignment questions using the animated view and summaries calculated from all 60 days.</p>
+      <div class="question-grid">
+        <article class="panel question"><span class="number">1</span><h3>How does overall connectivity change?</h3><p>The network becomes denser late in the period. Days 1–20 average <strong>5.50 active links</strong> and 8.55 active companies, while days 41–60 average <strong>7.25 links</strong> and 9.65 active companies. Daily value rises from about <strong>$77,196</strong> to <strong>$144,326</strong>.</p></article>
+        <article class="panel question"><span class="number">2</span><h3>Which companies become central or active?</h3><p><strong>Fusion Electronics</strong> has the greatest total 60-day volume (about $1.99M) and eight distinct partners. In days 31–60, <strong>Ion Systems</strong> becomes the volume leader (about $1.17M), followed by Fusion Electronics and Cedar Retail.</p></article>
+        <article class="panel question"><span class="number">3</span><h3>When does the network separate into clusters?</h3><p>Fragmentation is strongest on low-activity days such as 1, 7, 11, 13, 17, and 19: each has only three links and several isolated pairs. The later period has fewer components on average (5.05 including isolates, versus 6.50 earlier), so clusters are increasingly bridged.</p></article>
+        <article class="panel question"><span class="number">4</span><h3>Which relationships change or become stronger?</h3><p>Links appear and disappear from day to day rather than remaining continuously active. The strongest repeated relationship is <strong>Delta Components–Fusion Electronics</strong> (about $440K across 20 active days). Other persistent high-value pairs include Ion Systems–Lumen Distribution and Apex Textiles–BlueRiver Logistics.</p></article>
+        <article class="panel question wide"><span class="number">5</span><h3>Does the network become more cross-regional?</h3><p>Yes. Cross-regional links account for an average of <strong>55.7%</strong> of daily links in days 1–20, <strong>63.0%</strong> in days 21–40, and <strong>72.5%</strong> in days 41–60. The animation therefore shows a clear shift from more regionally contained activity toward a more internationally connected network.</p></article>
+      </div>
+    </section>
+
+ 
+  </main>
+  <div id="tooltip" class="tooltip" role="tooltip"></div>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="assignment.js"></script>
+</body>
+</html>

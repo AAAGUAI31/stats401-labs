@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lab 7 演示：时间数据可视化</title>
+  <style>
+    :root { --ink:#172033; --muted:#657187; --paper:#fff; --line:#dce3ed; --blue:#2563eb; --bg:#f4f7fb; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family:Inter,"Microsoft YaHei",system-ui,sans-serif; }
+    main { width:min(1180px, calc(100% - 32px)); margin:auto; padding:32px 0 48px; }
+    h1 { margin:0; font-size:clamp(28px,4vw,42px); } h2 { margin:0 0 8px; font-size:21px; }
+    p { line-height:1.65; } .muted { color:var(--muted); }
+    .card { background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:20px; box-shadow:0 5px 18px rgba(20,35,60,.045); }
+    .controls { display:grid; grid-template-columns:repeat(4,minmax(130px,1fr)); gap:14px; margin:20px 0; }
+    label { display:grid; gap:6px; color:#40506a; font-size:13px; font-weight:700; }
+    select,input,button { font:inherit; } select,input[type=date],button { min-height:38px; border:1px solid #cbd5e1; border-radius:8px; background:white; padding:7px 9px; }
+    button { cursor:pointer; color:white; background:var(--blue); border-color:var(--blue); font-weight:700; } button.secondary { color:#34435a; background:#fff; border-color:#cbd5e1; }
+    .city-list { display:flex; gap:12px; flex-wrap:wrap; align-items:center; padding:10px 0 2px; }
+    .city-list label { display:flex; gap:5px; align-items:center; font-weight:500; }
+    .chart-wrap { position:relative; overflow-x:auto; } svg { display:block; min-width:760px; width:100%; height:auto; }
+    .axis-label { fill:#536176; font-size:12px; } .chart-title { font-size:16px; font-weight:750; fill:#172033; }
+    .tooltip { position:fixed; z-index:10; max-width:245px; padding:10px 12px; color:#fff; background:rgba(18,27,43,.96); border-radius:8px; font-size:13px; line-height:1.55; pointer-events:none; opacity:0; transition:opacity .1s; }
+    .animation { display:grid; grid-template-columns:auto auto auto 1fr auto; gap:9px; align-items:center; margin-top:14px; } .animation input { width:100%; }
+    .summary { margin:13px 0 0; color:#35445c; font-size:14px; } .status { color:var(--muted); font-size:13px; }
+    .task-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-top:24px; }
+    details { border:1px solid var(--line); border-radius:10px; background:#fff; padding:12px 14px; } summary { cursor:pointer; color:#1d3f83; font-weight:750; } pre { overflow:auto; margin:12px 0 2px; padding:12px; background:#111827; color:#e5edf9; border-radius:7px; font:12px/1.55 Consolas,"Courier New",monospace; white-space:pre; }
+    .note { border-left:4px solid #60a5fa; padding:10px 14px; background:#eff6ff; color:#29456f; border-radius:0 8px 8px 0; }
+    .footer { display:inline-block; margin-top:22px; color:#1d4ed8; } @media(max-width:780px) { .controls { grid-template-columns:repeat(2,1fr); } .task-grid { grid-template-columns:1fr; } .animation { grid-template-columns:repeat(3,auto); } .animation input { grid-column:1/-1; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="muted">STATS 401 · Lab 7 · 演示部分（不含 Assignment）</p>
+      <h1>天气时间序列：从折线图到可控动画</h1>
+      <p class="muted">本页按 Lab7 的 Task 1–11 顺序整理。数据在 <code>task.json</code>，所有 D3 演示代码和中文注释都在本文件中。</p>
+    </header>
+
+    <section class="card" aria-label="天气时间序列演示">
+      <h2>Task 3–10：可运行的整合演示</h2>
+      <p class="muted">先看 Tokyo 的温度线，再同时比较多座城市；可切换指标、悬停查看、筛选日期、框选时间范围，并播放 Tokyo 的时间点。</p>
+      <div class="controls">
+        <label>Task 5：天气指标<select id="metric"></select></label>
+        <label>Task 7：起始日期<input id="start-date" type="date"></label>
+        <label>Task 7：结束日期<input id="end-date" type="date"></label>
+        <label>&nbsp;<button id="apply-range" type="button">应用日期范围</button></label>
+      </div>
+      <div id="city-list" class="city-list" aria-label="选择城市"></div>
+      <div class="chart-wrap"><div id="chart"></div></div>
+      <div class="animation" aria-label="Task 10 动画控制">
+        <button id="play" type="button">播放</button><button id="pause" class="secondary" type="button">暂停</button><button id="reset" class="secondary" type="button">重置</button>
+        <input id="time-slider" type="range" min="0" max="179" value="0" aria-label="时间滑块"><span id="frame-status" class="status">—</span>
+      </div>
+      <p id="summary" class="summary">正在读取天气数据…</p>
+    </section>
+
+    <section class="note" style="margin-top:24px"><strong>Task 11 的结论：</strong>折线图适合看整体趋势、峰值与多城市比较；动画适合逐日观察变化，但远距离时间点的比较较困难，因此本页同时保留总览折线图和可控动画。</section>
+
+    <section class="task-grid" aria-label="按顺序整理的任务代码">
+      <details open><summary>Task 1–2：数据与日期解析</summary><pre>// task.json 是由课程提供的天气 CSV 整理而来。
+// JSON 中 date 仍是字符串，所以读取后必须转换成 Date。
+const parseDate = d3.timeParse("%Y-%m-%d");
+d3.json("task.json").then(rawData =&gt; {
+  const data = rawData.map(d =&gt; ({ ...d, date: parseDate(d.date) }));
+  // data 现在可以用于 scaleTime、extent 和 bisector。
+});
+
+// 若直接使用原始 CSV，等价写法是：
+// d3.csv("../data/lab7_historical_weather.csv", d =&gt; ({
+//   ...d, date: parseDate(d.date), temperature_c: +d.temperature_c
+// }));</pre></details>
+      <details><summary>Task 3：单城市折线图</summary><pre>// 先取 Tokyo，按日期升序排列；这就是最小的折线图数据。
+const cityData = data.filter(d =&gt; d.city === "Tokyo")
+  .sort((a, b) =&gt; d3.ascending(a.date, b.date));
+
+const xScale = d3.scaleTime()
+  .domain(d3.extent(cityData, d =&gt; d.date))
+  .range([margin.left, width - margin.right]);
+const yScale = d3.scaleLinear()
+  .domain(d3.extent(cityData, d =&gt; d.temperature_c)).nice()
+  // 屏幕 y 轴向下增加，所以 range 必须反过来。
+  .range([height - margin.bottom, margin.top]);
+
+const line = d3.line()
+  .x(d =&gt; xScale(d.date))
+  .y(d =&gt; yScale(d.temperature_c));
+svg.append("path").datum(cityData).attr("d", line);</pre></details>
+      <details><summary>Task 4：比较多座城市</summary><pre>const selectedCities = ["Tokyo", "London", "New York"];
+const filteredData = data.filter(d =&gt; selectedCities.includes(d.city));
+const grouped = d3.groups(filteredData, d =&gt; d.city);
+const colorScale = d3.scaleOrdinal()
+  .domain(selectedCities).range(d3.schemeTableau10);
+
+// grouped 的每个元素是 [城市名, 该城市的观测数组]。
+svg.selectAll(".city-line").data(grouped, d =&gt; d[0]).join("path")
+  .attr("class", "city-line").attr("fill", "none")
+  .attr("stroke", d =&gt; colorScale(d[0]))
+  .attr("d", d =&gt; line(d[1]));</pre></details>
+      <details><summary>Task 5：切换天气指标</summary><pre>// 下拉选单的 value 是资料栏位名称，例如 temperature_c。
+d3.select("#metric").on("change", function () {
+  updateChart(this.value);
+});
+
+function updateChart(metric) {
+  yScale.domain(d3.extent(filteredData, d =&gt; d[metric])).nice();
+  line.y(d =&gt; yScale(d[metric]));
+  svg.selectAll(".city-line").transition().duration(600)
+    .attr("d", d =&gt; line(d[1]));
+}</pre></details>
+      <details><summary>Task 6：悬停明细（tooltip）</summary><pre>const bisectDate = d3.bisector(d =&gt; d.date).center;
+function moved(event) {
+  const [mouseX] = d3.pointer(event);       // 像素位置
+  const date = xScale.invert(mouseX);       // 像素位置转回日期
+  const index = bisectDate(cityData, date); // 找最接近的资料点
+  const d = cityData[index];
+  tooltip.style("opacity", 1).html(`${d.city}&lt;br&gt;${d.date}`);
+}</pre></details>
+      <details><summary>Task 7：日期范围与 brush</summary><pre>// 日期输入框筛选资料后，重新设定两个比例尺的 domain。
+const rangeData = cityData.filter(d =&gt;
+  d.date &gt;= startDate &amp;&amp; d.date &lt;= endDate);
+xScale.domain(d3.extent(rangeData, d =&gt; d.date));
+yScale.domain(d3.extent(rangeData, d =&gt; d.temperature_c)).nice();
+
+const brush = d3.brushX().extent([[margin.left, margin.top],
+  [width - margin.right, height - margin.bottom]])
+  .on("end", brushed);
+function brushed(event) {
+  if (!event.selection) return;
+  const [x0, x1] = event.selection;
+  // xScale.invert 把框选的左右像素边界转换成起止日期。
+  applyRange(xScale.invert(x0), xScale.invert(x1));
+}</pre></details>
+      <details><summary>Task 8–9：动画概念与单帧</summary><pre>// 折线图：时间映射到 x 位置；动画：资料时间映射到播放顺序。
+let currentIndex = 0;
+let timer = null;
+const marker = svg.append("circle").attr("r", 7).attr("fill", "#dc2626");
+
+function showFrame(index) {
+  const d = cityData[index];
+  marker.attr("cx", xScale(d.date)).attr("cy", yScale(d.temperature_c));
+  dateLabel.text(d3.timeFormat("%Y-%m-%d")(d.date));
+  d3.select("#time-slider").property("value", index);
+}</pre></details>
+      <details><summary>Task 10：播放、暂停、重置与拖动</summary><pre>function play() {
+  if (timer) return; // 避免重复建立多个计时器。
+  timer = d3.interval(() =&gt; {
+    showFrame(currentIndex);
+    currentIndex += 1;
+    if (currentIndex &gt;= cityData.length) pause();
+  }, 150);
+}
+function pause() { if (timer) { timer.stop(); timer = null; } }
+function reset() { pause(); currentIndex = 0; showFrame(0); }
+d3.select("#time-slider").on("input", function () {
+  pause(); currentIndex = +this.value; showFrame(currentIndex);
+});</pre></details>
+    </section>
+    <a class="footer" href="index.html">← 返回 Lab 7 首页</a>
+  </main>
+  <div id="tooltip" class="tooltip" role="tooltip"></div>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script>
+    // ===== Task 2：加载 task.json，并将日期字符串解析成 Date 物件 =====
+    const parseDate = d3.timeParse("%Y-%m-%d");
+    const formatDate = d3.timeFormat("%Y-%m-%d");
+    const metricInfo = {
+      temperature_c: { label: "温度", unit: "°C" }, humidity_pct: { label: "湿度", unit: "%" },
+      wind_speed_mps: { label: "风速", unit: "m/s" }, pressure_hpa: { label: "气压", unit: "hPa" },
+      precipitation_mm: { label: "降水量", unit: "mm" }
+    };
+    const initialCities = ["Tokyo", "London", "New York"];
+    let data, selectedCities = [...initialCities], currentMetric = "temperature_c";
+    let startDate, endDate, currentIndex = 0, timer = null;
+
+    // ===== Task 3：建立 SVG、边距、比例尺与坐标轴 =====
+    const width = 960, height = 490;
+    const margin = { top: 54, right: 44, bottom: 78, left: 76 };
+    const svg = d3.select("#chart").append("svg").attr("viewBox", `0 0 ${width} ${height}`);
+    const plot = svg.append("g");
+    const xScale = d3.scaleTime().range([margin.left, width - margin.right]);
+    // y 的 range 反转：较大的值才会画在屏幕上方。
+    const yScale = d3.scaleLinear().range([height - margin.bottom, margin.top]);
+    const xAxis = svg.append("g").attr("transform", `translate(0,${height - margin.bottom})`);
+    const yAxis = svg.append("g").attr("transform", `translate(${margin.left},0)`);
+    svg.append("text").attr("class", "chart-title").attr("x", margin.left).attr("y", 27).text("天气指标随时间的变化");
+    const yLabel = svg.append("text").attr("class", "axis-label").attr("transform", `translate(18,${height / 2}) rotate(-90)`).attr("text-anchor", "middle");
+    const xLabel = svg.append("text").attr("class", "axis-label").attr("x", width / 2).attr("y", height - 20).attr("text-anchor", "middle").text("日期");
+    const line = d3.line().x(d => xScale(d.date)).y(d => yScale(d[currentMetric]));
+    const lineGroup = plot.append("g");
+
+    // ===== Task 6：透明覆盖层接收鼠标事件；bisector 找到最接近的日期 =====
+    const tooltip = d3.select("#tooltip");
+    const overlay = plot.append("rect").attr("fill", "transparent").style("cursor", "crosshair")
+      .on("mousemove", moved).on("mouseleave", () => tooltip.style("opacity", 0));
+    const hoverLine = plot.append("line").attr("stroke", "#64748b").attr("stroke-dasharray", "4 4").attr("opacity", 0);
+    const bisectDate = d3.bisector(d => d.date).center;
+
+    // ===== Task 9：红点与日期标签表示动画中的当前观察 =====
+    const marker = plot.append("circle").attr("r", 6).attr("fill", "#dc2626").attr("stroke", "white").attr("stroke-width", 2);
+    const dateLabel = svg.append("text").attr("x", width - margin.right).attr("y", 27).attr("text-anchor", "end").attr("font-size", 16).attr("font-weight", 750);
+
+    // ===== Task 7：横向 brush；结束框选时以该范围更新图表 =====
+    const brush = d3.brushX().extent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]]).on("end", brushed);
+    const brushGroup = plot.append("g").attr("class", "brush").call(brush)
+      // brush 图层在最上方，也同时接收移动事件，tooltip 仍可正常显示。
+      .on("mousemove", moved).on("mouseleave", () => tooltip.style("opacity", 0));
+
+    d3.json("task.json").then(raw => {
+      data = raw.map(d => ({ ...d, date: parseDate(d.date) }));
+      const dateExtent = d3.extent(data, d => d.date);
+      startDate = dateExtent[0]; endDate = dateExtent[1];
+      d3.select("#start-date").property("value", formatDate(startDate));
+      d3.select("#end-date").property("value", formatDate(endDate));
+      d3.select("#metric").selectAll("option").data(Object.entries(metricInfo)).join("option")
+        .attr("value", d => d[0]).text(d => d[1].label);
+      makeCityControls(); updateChart(false); showFrame(0);
+    }).catch(error => d3.select("#summary").text(`读取 task.json 失败：${error.message}`));
+
+    // ===== Task 4：城市分组；每个城市对应一条线和一种颜色 =====
+    const colorScale = d3.scaleOrdinal(d3.schemeTableau10);
+    function visibleData() { return data.filter(d => selectedCities.includes(d.city) && d.date >= startDate && d.date <= endDate); }
+    function groupedData() { return d3.groups(visibleData(), d => d.city).map(([city, values]) => [city, values.sort((a, b) => d3.ascending(a.date, b.date))]); }
+    function makeCityControls() {
+      const cities = [...new Set(data.map(d => d.city))];
+      d3.select("#city-list").selectAll("label").data(cities).join("label").html(d => `<input type="checkbox" value="${d}"> ${d}`)
+        .select("input").property("checked", d => selectedCities.includes(d)).on("change", function() {
+          const city = this.value;
+          if (this.checked) selectedCities.push(city); else if (selectedCities.length > 1) selectedCities = selectedCities.filter(d => d !== city); else { this.checked = true; return; }
+          updateChart();
+        });
+    }
+
+    // ===== Task 5：指标改变时重算 y 轴并以 transition 更新线条 =====
+    function updateChart(animate = true) {
+      const groups = groupedData();
+      const rows = groups.flatMap(d => d[1]);
+      if (!rows.length) return;
+      xScale.domain(d3.extent(rows, d => d.date));
+      yScale.domain(d3.extent(rows, d => d[currentMetric])).nice();
+      const transition = svg.transition().duration(animate ? 550 : 0);
+      xAxis.transition(transition).call(d3.axisBottom(xScale).ticks(7).tickFormat(d3.timeFormat("%b %d")));
+      yAxis.transition(transition).call(d3.axisLeft(yScale));
+      yLabel.text(`${metricInfo[currentMetric].label} (${metricInfo[currentMetric].unit})`);
+      line.y(d => yScale(d[currentMetric]));
+      lineGroup.selectAll("path").data(groups, d => d[0]).join(
+        enter => enter.append("path").attr("fill", "none").attr("stroke-width", 2.4).attr("stroke", d => colorScale(d[0])).attr("d", d => line(d[1])),
+        update => update.call(sel => sel.transition(transition).attr("stroke", d => colorScale(d[0])).attr("d", d => line(d[1]))),
+        exit => exit.remove()
+      );
+      overlay.attr("x", margin.left).attr("y", margin.top).attr("width", width - margin.left - margin.right).attr("height", height - margin.top - margin.bottom);
+      brushGroup.raise(); marker.raise();
+      updateSlider();
+      d3.select("#summary").text(`已显示 ${selectedCities.join("、")}：${formatDate(startDate)} 至 ${formatDate(endDate)}；指标为${metricInfo[currentMetric].label}。`);
+    }
+
+    // ===== Task 6：将鼠标 x 像素位置反转为日期，并找动画城市的最近一笔资料 =====
+    function animationData() { const city = selectedCities.includes("Tokyo") ? "Tokyo" : selectedCities[0]; return data.filter(d => d.city === city && d.date >= startDate && d.date <= endDate); }
+    function moved(event) {
+      const series = animationData(); if (!series.length) return;
+      const [mouseX] = d3.pointer(event, svg.node());
+      const d = series[bisectDate(series, xScale.invert(mouseX))];
+      hoverLine.attr("x1", xScale(d.date)).attr("x2", xScale(d.date)).attr("y1", margin.top).attr("y2", height - margin.bottom).attr("opacity", 1);
+      tooltip.style("opacity", 1).style("left", `${event.clientX + 14}px`).style("top", `${event.clientY + 14}px`).html(`<strong>${d.city}, ${d.country}</strong><br>${formatDate(d.date)}<br>${metricInfo[currentMetric].label}：${d[currentMetric]} ${metricInfo[currentMetric].unit}<br>湿度：${d.humidity_pct}% · 风速：${d.wind_speed_mps} m/s`);
+    }
+
+    // ===== Task 7：手动日期输入和 brush 都调用这个函数 =====
+    function applyRange(from, to) {
+      if (!from || !to || from > to) { d3.select("#summary").text("日期范围无效：起始日期不能晚于结束日期。"); return; }
+      startDate = from; endDate = to;
+      d3.select("#start-date").property("value", formatDate(startDate)); d3.select("#end-date").property("value", formatDate(endDate));
+      pause(); currentIndex = 0; updateChart(); showFrame(0);
+    }
+    function brushed(event) { if (!event.selection) return; const [x0, x1] = event.selection; applyRange(xScale.invert(x0), xScale.invert(x1)); }
+    d3.select("#apply-range").on("click", () => applyRange(parseDate(d3.select("#start-date").property("value")), parseDate(d3.select("#end-date").property("value"))));
+    d3.select("#metric").on("change", function() { currentMetric = this.value; pause(); updateChart(); showFrame(currentIndex); });
+
+    // ===== Task 9–10：以一个唯一的计时器显示 frame，提供播放、暂停、重置、拖动 =====
+    function updateSlider() { const series = animationData(); d3.select("#time-slider").attr("max", Math.max(0, series.length - 1)); currentIndex = Math.min(currentIndex, Math.max(0, series.length - 1)); }
+    function showFrame(index) {
+      const series = animationData(); if (!series.length) return;
+      currentIndex = Math.max(0, Math.min(index, series.length - 1)); const d = series[currentIndex];
+      marker.attr("cx", xScale(d.date)).attr("cy", yScale(d[currentMetric]));
+      dateLabel.text(`动画：${d.city} · ${formatDate(d.date)}`);
+      d3.select("#time-slider").property("value", currentIndex); d3.select("#frame-status").text(`${currentIndex + 1} / ${series.length}`);
+    }
+    function play() { const series = animationData(); if (timer || !series.length) return; if (currentIndex >= series.length - 1) currentIndex = 0; timer = d3.interval(() => { showFrame(currentIndex); currentIndex += 1; if (currentIndex >= series.length) { currentIndex = series.length - 1; pause(); } }, 150); }
+    function pause() { if (timer) { timer.stop(); timer = null; } }
+    function reset() { pause(); currentIndex = 0; showFrame(0); }
+    d3.select("#play").on("click", play); d3.select("#pause").on("click", pause); d3.select("#reset").on("click", reset);
+    d3.select("#time-slider").on("input", function() { pause(); showFrame(+this.value); });
+  </script>
+</body>
+</html>
