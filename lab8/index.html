@@ -1,1 +1,104 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Lab 8</title><link rel="stylesheet" href="../css/style.css"></head><body><main class="page-shell"><section class="card"><h1>Lab 8</h1><p>Lab 8 will be added here.</p><a href="../index.html">Back to home</a></section></main></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lab 8 | DKU Bulletin Semantic Explorer</title>
+  <style>
+    :root { --ink:#172033; --muted:#66758b; --line:#dbe3ee; --paper:#fff; --bg:#f3f6fa; --blue:#2457d6; --blue-soft:#edf3ff; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:var(--bg); font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; }
+    main { width:min(1480px,calc(100% - 36px)); margin:auto; padding:34px 0 54px; }
+    a { color:#2457d6; }
+    header { display:grid; grid-template-columns:1fr auto; gap:24px; align-items:end; margin-bottom:20px; }
+    .eyebrow { margin:0 0 7px; color:#42618c; font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+    h1 { margin:0; font-size:clamp(30px,4vw,48px); letter-spacing:-.04em; }
+    h2 { margin:0; font-size:22px; } h3 { margin:0; font-size:16px; }
+    .subtitle { max-width:920px; margin:10px 0 0; color:var(--muted); line-height:1.62; }
+    .header-links { display:flex; gap:15px; flex-wrap:wrap; justify-content:flex-end; }
+    .panel { background:var(--paper); border:1px solid var(--line); border-radius:15px; box-shadow:0 6px 20px rgba(18,35,65,.05); }
+    .source-note { margin-bottom:18px; padding:14px 17px; color:#40506a; font-size:14px; line-height:1.6; }
+    .stats { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; margin-bottom:20px; }
+    .stat { padding:16px 17px; } .stat span { display:block; color:var(--muted); font-size:11px; font-weight:750; letter-spacing:.06em; text-transform:uppercase; }
+    .stat strong { display:block; margin-top:4px; color:#183c86; font-size:25px; }
+    .section-head { margin:26px 0 13px; } .section-head p { margin:6px 0 0; color:var(--muted); font-size:14px; line-height:1.55; }
+    .overview-grid { display:grid; grid-template-columns:1fr 1.2fr; gap:16px; }
+    .chart-panel { padding:18px; min-width:0; } .chart-panel p { margin:5px 0 12px; color:var(--muted); font-size:13px; }
+    svg { display:block; width:100%; height:auto; } #term-chart svg,#section-chart svg { min-width:560px; } .chart-scroll { overflow-x:auto; }
+    .controls { display:grid; grid-template-columns:minmax(230px,2fr) minmax(170px,1fr) minmax(190px,1fr) auto auto; gap:10px; align-items:end; padding:15px 17px; margin-bottom:14px; }
+    label { display:grid; gap:6px; color:#40506a; font-size:12px; font-weight:750; }
+    input,select,button { font:inherit; } input,select { width:100%; min-height:39px; padding:7px 10px; color:var(--ink); background:white; border:1px solid #cbd5e1; border-radius:8px; }
+    button { min-height:39px; padding:7px 14px; cursor:pointer; color:white; background:var(--blue); border:1px solid var(--blue); border-radius:8px; font-weight:750; }
+    button.secondary { color:#334155; background:white; border-color:#cbd5e1; } button:hover { filter:brightness(.96); }
+    .map-layout { display:grid; grid-template-columns:minmax(0,2.4fr) minmax(300px,.8fr); gap:15px; align-items:stretch; }
+    .map-panel { overflow:hidden; } #semantic-map { min-height:610px; overflow-x:auto; } #semantic-map svg { min-width:760px; }
+    .detail { padding:18px; min-height:610px; } .detail p { color:#526078; font-size:14px; line-height:1.65; }
+    .detail dl { display:grid; grid-template-columns:78px 1fr; gap:7px 10px; margin:14px 0; font-size:13px; }
+    .detail dt { color:var(--muted); } .detail dd { margin:0; font-weight:650; }
+    .passage { padding:12px; color:#334155; background:var(--blue-soft); border-radius:9px; font-size:13px; line-height:1.65; }
+    .neighbor-list { margin:10px 0 0; padding-left:20px; color:#475569; font-size:12px; line-height:1.55; }
+    .legend { display:flex; flex-wrap:wrap; gap:8px 15px; padding:13px 16px; border-top:1px solid var(--line); color:#526078; font-size:12px; }
+    .legend-item { display:inline-flex; align-items:center; gap:6px; } .swatch { width:11px; height:11px; border-radius:50%; }
+    .map-status { min-height:23px; margin:10px 2px 0; color:#526078; font-size:13px; } .empty { color:#b45309; font-weight:700; }
+    .matrix-panel { padding:16px; overflow:hidden; } .matrix-tools { display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .matrix-tools select { width:auto; min-width:190px; } #matrix { max-height:920px; overflow:auto; border:1px solid var(--line); border-radius:9px; background:#fbfdff; }
+    #matrix svg { min-width:980px; } .findings { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    .finding { padding:19px 21px; } .finding .number { display:inline-grid; place-items:center; width:27px; height:27px; margin-bottom:9px; color:#1e40af; background:var(--blue-soft); border-radius:50%; font-size:12px; font-weight:850; }
+    .finding h3 { line-height:1.4; } .finding p { margin:8px 0 0; color:#526078; font-size:14px; line-height:1.65; }
+    .method { padding:22px 25px; color:#46566e; font-size:14px; line-height:1.72; } .method p { margin:9px 0 0; }
+    .footer-link { display:inline-block; margin-top:22px; }
+    .tooltip { position:fixed; z-index:30; max-width:330px; padding:10px 12px; opacity:0; pointer-events:none; color:white; background:rgba(15,23,42,.96); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.22); font-size:13px; line-height:1.55; }
+    .axis text { fill:#64748b; font-size:11px; } .axis path,.axis line { stroke:#cbd5e1; } .grid line { stroke:#e5eaf1; } .grid path { display:none; }
+    .matrix-cell { cursor:pointer; } .error { margin:18px; padding:16px; color:#9f1239; background:#fff1f2; border-radius:9px; }
+    @media(max-width:1050px) { header,.map-layout { grid-template-columns:1fr; } .header-links { justify-content:flex-start; } .detail { min-height:auto; } }
+    @media(max-width:850px) { .stats { grid-template-columns:repeat(2,minmax(0,1fr)); } .overview-grid,.findings { grid-template-columns:1fr; } .controls { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media(max-width:560px) { main { width:min(100% - 20px,1480px); padding-top:24px; } .controls { grid-template-columns:1fr; } .matrix-tools { display:block; } .matrix-tools select { width:100%; margin-top:9px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div><p class="eyebrow">STATS 401 · LAB 8 ASSIGNMENT</p><h1>DKU Bulletin Semantic Explorer</h1><p class="subtitle">A coordinated view of the formal document hierarchy and latent semantic structure of the 2021-2022 Duke Kunshan University Undergraduate Bulletin.</p></div>
+      <nav class="header-links"><a href="task.html">Tutorial demo</a><a href="../index.html">All labs</a></nav>
+    </header>
+    <section class="panel source-note"><strong>Source.</strong> <em>Bulletin of Duke Kunshan University Undergraduate Instruction, 2021-2022</em>, official DKU admissions file, accessed September 23, 2026. <a href="https://dku-web-admissions.s3.cn-north-1.amazonaws.com.cn/dkumain/files/V2021-22_DKU_UG_Bulletin.pdf" target="_blank" rel="noopener">Open the official PDF</a>. PDF pages 3-9 contain the table of contents; corpus extraction begins on PDF page 10.</section>
+    <section class="stats" aria-label="Corpus statistics">
+      <div class="panel stat"><span>PDF pages</span><strong id="pdf-pages">—</strong></div><div class="panel stat"><span>Raw blocks</span><strong id="raw-passages">—</strong></div><div class="panel stat"><span>Clean passages</span><strong id="clean-passages">—</strong></div><div class="panel stat"><span>Average length</span><strong id="average-words">—</strong></div><div class="panel stat"><span>Formal sections</span><strong id="formal-sections">—</strong></div>
+    </section>
+    <div class="section-head"><h2>1. Corpus overview</h2><p>Two summaries establish the corpus shape before semantic modeling. Hover bars for exact counts.</p></div>
+    <section class="overview-grid">
+      <article class="panel chart-panel"><h3>Frequent meaningful terms</h3><p>Corpus frequency after stop-word and bulletin-boilerplate removal.</p><div class="chart-scroll"><div id="term-chart"></div></div></article>
+      <article class="panel chart-panel"><h3>Passages by formal section</h3><p>The 12 largest sections; all 80 remain available in the map filter and full matrix.</p><div class="chart-scroll"><div id="section-chart"></div></div></article>
+    </section>
+    <div class="section-head"><h2>2. Semantic embedding map</h2><p>One point is one passage. Position is the two-dimensional PCA projection of its 16-dimensional LSA embedding; fill is semantic topic and size is passage length.</p></div>
+    <section class="panel controls" aria-label="Semantic map controls">
+      <label>Search text or metadata<input id="search" type="search" placeholder="Try credit, graduation, registration…"></label><label>Formal section<select id="section-filter"><option value="all">All sections</option></select></label><label>Semantic topic<select id="topic-filter"><option value="all">All topics</option></select></label><button id="reset-zoom" class="secondary" type="button">Reset zoom</button><button id="clear-all" type="button">Clear all</button>
+    </section>
+    <section class="map-layout">
+      <article class="panel map-panel"><div id="semantic-map"></div><div id="topic-legend" class="legend" aria-label="Topic legend"></div></article>
+      <aside id="detail-panel" class="panel detail" aria-live="polite"><h3>Passage details</h3><p>Click a point to inspect its chapter, section, page, full text, and five nearest passages in the original 16-dimensional semantic space.</p></aside>
+    </section>
+    <p id="map-status" class="map-status" aria-live="polite">Loading assignment-data.json…</p>
+    <div class="section-head"><h2>3. Topic × bulletin section matrix</h2><p>Cell color encodes passage count. Hover for count and within-section proportion; click a cell to highlight the same passages in the map.</p></div>
+    <section class="panel matrix-panel"><div class="matrix-tools"><span id="matrix-status" class="map-status">Preparing matrix…</span><label>Rows shown<select id="matrix-scope"><option value="18">18 largest sections</option><option value="all">All 80 sections</option></select></label></div><div id="matrix"></div></section>
+    <div class="section-head"><h2>4. Semantic findings</h2><p>These observations are calculated from the cleaned passages, topic assignments, original embeddings, and coordinated views.</p></div>
+    <section class="findings">
+      <article class="panel finding"><span class="number">1</span><h3>What are the major semantic topics?</h3><p>The largest topic is <strong>Global Society, History and Politics</strong> (283 passages), followed by <strong>STEM, Data and Systems</strong> (166). The remaining themes cover language and writing (133), interdisciplinary majors (123), student services (114), credit and degree rules (92), enrollment progress (68), and leave or health policies (36).</p></article>
+      <article class="panel finding"><span class="number">2</span><h3>Which topics cross formal sections?</h3><p><strong>Student Services and Administration</strong> appears in 37 sections, credit and degree rules in 28, enrollment and term progress in 22, and interdisciplinary research in 20. Formal boundaries therefore do not isolate these concerns; advising, eligibility, progression, and support recur throughout the bulletin.</p></article>
+      <article class="panel finding"><span class="number">3</span><h3>Which sections are semantically diverse?</h3><p><strong>Course Descriptions</strong> spans seven topics. Among more compact sections, <strong>Major Requirements</strong> has six topics and the highest entropy (2.06 bits), while <strong>Degree Requirements</strong> covers five topics (2.03 bits). Study Away also crosses four topics, connecting scheduling, services, credits, and global learning.</p></article>
+      <article class="panel finding"><span class="number">4</span><h3>Which passages from different sections are similar?</h3><p>Passages <strong>p0122</strong> (Transfer of Work Taken Elsewhere) and <strong>p0300</strong> (Office of Global Education and Study Away) have cosine similarity <strong>0.991</strong>: both explain approval and transfer of outside credit. Parallel warning policies for older and newer class cohorts also form nearly identical cross-section pairs.</p></article>
+      <article class="panel finding"><span class="number">5</span><h3>Which passages are unusual for their section?</h3><p>Within Major Requirements, <strong>p0336</strong> and <strong>p0337</strong> discuss EAP and third-language obligations and have section-centroid similarities of only <strong>0.139</strong> and <strong>0.239</strong>. Their language-policy meaning differs from the section’s dominant major-curriculum content, making them visible semantic outliers.</p></article>
+      <article class="panel finding"><span class="number">6</span><h3>Does “credit” occupy one semantic region?</h3><p>No. <strong>Credit</strong> occurs in 132 passages across all eight topics: 56 concern grades and degree progress, but it also appears in enrollment, language, leave, major, service, STEM, and global-society contexts. Graduation spans four topics; registration spans four; academic integrity appears in two.</p></article>
+    </section>
+    <div class="section-head"><h2>5. Design description</h2></div>
+    <section class="panel method"><h3>Methods and visual design (247 words)</h3>
+      <p>The 400-page 2021-2022 DKU Undergraduate Bulletin was downloaded from the official university admissions site. PDF font size and weight identified Parts, sections, subsections, and course titles. Pages 3-9 (the table of contents), page numbers, repeated text, grade tables, short fragments, and course-list rows were removed. Long blocks were split at sentence boundaries, leaving 1,015 interpretable passages from 1,314 raw blocks. Each passage retains chapter, section, subsection, PDF page, original text, and word count.</p>
+      <p>For a fully local and reproducible semantic model, normalized TF-IDF vectors were projected into a 16-dimensional latent semantic analysis (LSA) space with truncated singular-value power iteration. PCA then reduced the normalized LSA embeddings to two dimensions. PCA was chosen as the justified alternative to UMAP because it is deterministic, exposes broad corpus structure, and requires no externally downloaded model. Cosine K-means with eight clusters was fitted in the original 16-dimensional space, not the display coordinates. Topic names were assigned only after inspecting characteristic TF-IDF terms and three centroid-nearest passages per cluster.</p>
+      <p>In the map, position represents projected semantic similarity, fill represents topic, and radius represents passage length. Search and section/topic filters alter opacity without removing context; zoom and pan support dense regions. Clicking a passage shows its full hierarchy and five nearest neighbors calculated in the original embedding space. The matrix aggregates count and within-section proportion for every section-topic pair. Matrix clicks highlight matching map points, while point clicks outline the corresponding cell, directly connecting formal structure with semantic structure.</p>
+    </section>
+    <a class="footer-link" href="../index.html">← Back to all labs</a>
+  </main>
+  <div id="tooltip" class="tooltip" role="tooltip"></div>
+  <script src="d3.v7.min.js"></script><script src="assignment.js"></script>
+</body>
+</html>

@@ -1,0 +1,1052 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lab 8 演示：网页文本与语义可视化</title>
+  <style>
+    :root {
+      --ink: #162033;
+      --muted: #64748b;
+      --paper: #ffffff;
+      --line: #dbe3ee;
+      --soft: #f1f5f9;
+      --blue: #2563eb;
+      --blue-soft: #eff6ff;
+      --amber: #d97706;
+      --bg: #f5f7fb;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+    }
+    main { width: min(1240px, calc(100% - 32px)); margin: auto; padding: 34px 0 56px; }
+    h1 { margin: 4px 0 10px; font-size: clamp(29px, 4vw, 44px); line-height: 1.15; }
+    h2 { margin: 0 0 8px; font-size: 22px; }
+    h3 { margin: 0 0 8px; font-size: 17px; }
+    p { line-height: 1.65; }
+    code { font-family: Consolas, "Courier New", monospace; }
+    .eyebrow { margin: 0; color: var(--blue); font-size: 13px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .muted { color: var(--muted); }
+    .notice {
+      margin: 20px 0;
+      padding: 13px 16px;
+      border: 1px solid #f4c66b;
+      border-left: 5px solid var(--amber);
+      border-radius: 10px;
+      background: #fffbeb;
+      color: #754b08;
+      line-height: 1.65;
+    }
+    .card {
+      margin-top: 20px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: var(--paper);
+      box-shadow: 0 6px 22px rgba(31, 50, 81, .05);
+    }
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 20px 0; }
+    .stat { padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+    .stat strong { display: block; font-size: 27px; color: #173f91; }
+    .stat span { color: var(--muted); font-size: 13px; }
+    .controls { display: grid; grid-template-columns: minmax(220px, 2fr) 1fr 1fr auto auto; gap: 12px; align-items: end; }
+    label { display: grid; gap: 6px; color: #40506a; font-size: 13px; font-weight: 750; }
+    input, select, button { font: inherit; }
+    input, select {
+      width: 100%;
+      min-height: 40px;
+      padding: 8px 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+    }
+    button {
+      min-height: 40px;
+      padding: 8px 13px;
+      border: 1px solid var(--blue);
+      border-radius: 8px;
+      background: var(--blue);
+      color: white;
+      cursor: pointer;
+      font-weight: 750;
+    }
+    button.secondary { border-color: #cbd5e1; background: white; color: #34435a; }
+    button:hover { filter: brightness(.96); }
+    .view-grid { display: grid; grid-template-columns: minmax(0, 2.15fr) minmax(270px, .85fr); gap: 16px; align-items: stretch; }
+    .chart-wrap { min-width: 0; overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: #fbfdff; }
+    svg { display: block; width: 100%; height: auto; min-width: 680px; }
+    .detail-panel { min-height: 380px; padding: 17px; border: 1px solid var(--line); border-radius: 12px; background: #fbfdff; }
+    .detail-panel dl { display: grid; grid-template-columns: 74px 1fr; gap: 7px 10px; margin: 14px 0; font-size: 14px; }
+    .detail-panel dt { color: var(--muted); }
+    .detail-panel dd { margin: 0; font-weight: 650; }
+    .passage-text { padding: 12px; border-radius: 8px; background: var(--blue-soft); font-size: 14px; line-height: 1.65; }
+    .neighbor-list { margin: 10px 0 0; padding-left: 20px; color: #334155; font-size: 13px; line-height: 1.55; }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 12px 0 0; color: #475569; font-size: 12px; }
+    .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+    .swatch { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+    .status { margin: 10px 0 0; min-height: 22px; color: #475569; font-size: 13px; }
+    .empty { color: #b45309; font-weight: 700; }
+    .tooltip {
+      position: fixed;
+      z-index: 20;
+      max-width: 310px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: rgba(15, 23, 42, .96);
+      color: white;
+      font-size: 13px;
+      line-height: 1.5;
+      pointer-events: none;
+      opacity: 0;
+      box-shadow: 0 7px 24px rgba(0, 0, 0, .2);
+    }
+    .task-list { display: grid; gap: 11px; margin-top: 18px; }
+    details { border: 1px solid var(--line); border-radius: 11px; background: white; overflow: hidden; }
+    summary { padding: 13px 15px; cursor: pointer; color: #1d3f83; font-weight: 800; background: #fbfdff; }
+    details p { margin: 0; padding: 0 15px 12px; color: #56657a; font-size: 14px; }
+    pre { margin: 0; padding: 15px; overflow: auto; background: #111827; color: #e5edf9; font: 12px/1.62 Consolas, "Courier New", monospace; white-space: pre; }
+    .footer { display: inline-block; margin-top: 22px; color: #1d4ed8; }
+    .axis text { fill: #64748b; font-size: 11px; }
+    .axis line, .axis path { stroke: #cbd5e1; }
+    .cell { cursor: pointer; }
+    @media (max-width: 940px) {
+      .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .controls button { width: 100%; }
+      .view-grid { grid-template-columns: 1fr; }
+      .detail-panel { min-height: auto; }
+    }
+    @media (max-width: 620px) {
+      main { width: min(100% - 20px, 1240px); padding-top: 22px; }
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .controls { grid-template-columns: 1fr; }
+      .card { padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">STATS 401 · Lab 8 · Tutorial Demo</p>
+      <h1>网页文本数据与语义可视化</h1>
+      <p class="muted">按照 Lab 8 的 Task 1–15 整理：先把长文档拆成 passage，再连接语义地图、Topic × Section 矩阵、搜索、筛选、最近邻与详细信息。</p>
+    </header>
+
+    <div class="notice">
+      <strong>范围说明：</strong>本页使用 24 条虚构的 bulletin 风格短文本和简化向量，只用于演示代码结构与交互逻辑，不是真实 DKU Bulletin 的处理结果，也不属于 Assignment 成果。真实作业需要重新提取语料并运行 embedding、UMAP 和 clustering。
+    </div>
+
+    <section id="stats" class="stats" aria-label="语料概览">
+      <div class="stat"><strong id="passage-count">—</strong><span>Passages</span></div>
+      <div class="stat"><strong id="section-count">—</strong><span>正式 Sections</span></div>
+      <div class="stat"><strong id="topic-count">—</strong><span>语义 Topics</span></div>
+      <div class="stat"><strong id="average-length">—</strong><span>平均词数</span></div>
+    </section>
+
+    <section class="card" aria-labelledby="map-title">
+      <h2 id="map-title">Task 11–13：交互式语义地图</h2>
+      <p class="muted">点的位置表示二维语义坐标，颜色表示语义主题，大小表示段落词数，外框颜色表示原始 section。坐标轴本身没有独立语义。</p>
+      <div class="controls">
+        <label>搜索段落
+          <input id="search" type="search" placeholder="例如 credit、course、study...">
+        </label>
+        <label>正式 Section
+          <select id="section-filter"><option value="all">全部 Sections</option></select>
+        </label>
+        <label>语义 Topic
+          <select id="topic-filter"><option value="all">全部 Topics</option></select>
+        </label>
+        <button id="reset-zoom" class="secondary" type="button">重置视图</button>
+        <button id="clear-all" type="button">清除选择</button>
+      </div>
+      <div class="view-grid" style="margin-top:16px">
+        <div>
+          <div class="chart-wrap"><div id="semantic-map"></div></div>
+          <div id="topic-legend" class="legend" aria-label="主题填充色与 section 外框色图例"></div>
+          <p id="map-status" class="status" aria-live="polite">正在读取 task.json…</p>
+        </div>
+        <aside id="detail-panel" class="detail-panel" aria-live="polite">
+          <h3>段落详细信息</h3>
+          <p class="muted">点击一个圆点查看原始结构、完整文本及余弦相似度最高的 5 个段落。</p>
+        </aside>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="matrix-title">
+      <h2 id="matrix-title">Task 14–15：Topic × Bulletin Section 矩阵</h2>
+      <p class="muted">颜色越深表示 passage 数量越多。点击单元格可在语义地图中突出对应 passage；点击散点也会反向标记所属单元格。</p>
+      <div class="chart-wrap"><div id="matrix"></div></div>
+      <p id="matrix-status" class="status">矩阵将由同一份 task.json 动态汇总。</p>
+    </section>
+
+    <section class="card" aria-labelledby="code-title">
+      <h2 id="code-title">Task 1–15：按顺序整理的代码与中文注释</h2>
+      <p class="muted">Task 1–10 是真实项目中应运行的 Python 数据流程；Task 11–15 是本页正在运行的 D3 交互逻辑。展开每项可查看对应代码。</p>
+      <div class="task-list">
+        <details open>
+          <summary>Task 1 — 选择分析单位：一个短段落对应一个数据点</summary>
+          <p>不要把单个词或整章直接当成一个点。每条 passage 应当包含足以独立理解的上下文。</p>
+          <pre><code># 原始抽取结果按段落遍历；这里只保留具有实际文字内容的短段落。
+passages = []
+for paragraph in extracted_paragraphs:
+    text = paragraph.strip()
+    if len(text.split()) &gt;= 8:  # 过短的标题或页码暂不作为 passage
+        passages.append(text)
+
+# 后续的每个 passage 都会对应语义地图上的一个点。
+print("分析单位数量：", len(passages))</code></pre>
+        </details>
+
+        <details>
+          <summary>Task 2 — 保存 chapter / section / subsection / page 结构</summary>
+          <p>同时保存“文本在哪里”与“文本讲什么”，才能比较正式结构和语义结构。</p>
+          <pre><code>records.append({
+    "passage_id": f"p{index:03d}",  # 每条 passage 的唯一编号
+    "chapter": current_chapter,      # 文档最高层级
+    "section": current_section,      # 矩阵的行变量
+    "subsection": current_subsection,
+    "page": page_number,             # 回查原文时使用
+    "text": paragraph                # 保留原始可读文本
+})
+
+df = pd.DataFrame(records)</code></pre>
+        </details>
+
+        <details>
+          <summary>Task 3 — 清洗语料，但不过度删除语义信息</summary>
+          <p>删除缺失与重复文本，合并多余空白；semantic embedding 前通常不必激进删除停用词。</p>
+          <pre><code>import pandas as pd
+
+df = pd.read_csv("../data/bulletin_passages.csv")
+
+# 没有文本的记录无法生成 embedding，因此先删除。
+df = df.dropna(subset=["text"])
+
+# 完全相同的段落通常来自重复页眉、页脚或 PDF 抽取错误。
+df = df.drop_duplicates(subset=["text"])
+
+df["text_clean"] = (
+    df["text"]
+      .str.replace(r"\s+", " ", regex=True)  # 换行和连续空格合并为一个空格
+      .str.strip()                            # 删除段落首尾空白
+)
+
+# 真实项目还应人工检查页眉、页码、目录残片和被错误切断的段落。
+df = df[df["text_clean"].str.len() &gt; 0]</code></pre>
+        </details>
+
+        <details>
+          <summary>Task 4 — 计算基本语料统计</summary>
+          <p>复杂建模前先检查段落长度和 section 分布，本页顶部的四张卡片就是这一思路的浏览器版本。</p>
+          <pre><code># 以空白切词，得到每条 passage 的简单词数。
+df["word_count"] = df["text_clean"].str.split().str.len()
+
+print(df["word_count"].describe())
+print(df["section"].value_counts())
+
+summary = {
+    "passages": len(df),
+    "sections": df["section"].nunique(),
+    "average_words": df["word_count"].mean()
+}
+print(summary)</code></pre>
+        </details>
+
+        <details>
+          <summary>Task 5 — TF-IDF 解释词语，embedding 组织语义</summary>
+          <p>TF-IDF 适合找出每个主题的特征词；embedding 更适合比较整段文字的含义。</p>
+          <pre><code>from sklearn.feature_extraction.text import TfidfVectorizer
+
+# min_df 可排除只出现一次的偶然词；真实数据应根据语料大小调整。
+vectorizer = TfidfVectorizer(
+    stop_words="english",
+    min_df=2,
+    ngram_range=(1, 2)
+)
+
+tfidf = vectorizer.fit_transform(df["text_clean"])
+terms = vectorizer.get_feature_names_out()
+
+# TF-IDF 用于解释 cluster，而不是代替 semantic embedding。
+print("TF-IDF 矩阵：", tfidf.shape)</code></pre>
+        </details>
+
+        <details>
+          <summary>Task 6 — 使用 SentenceTransformer 生成语义向量</summary>
+          <p>本页 JSON 中只有六维简化向量；真实作业应运行模型产生完整 embedding。</p>
+          <pre><code>from sentence_transformers import SentenceTransformer
+
+model = SentenceTransformer("all-MiniLM-L6-v2")
+
+embeddings = model.encode(
+    df["text_clean"].tolist(),
+    normalize_embeddings=True,  # 归一化后点积等价于余弦相似度
+    show_progress_bar=True
+)
+
+print(embeddings.shape)  # all-MiniLM-L6-v2 通常输出 384 维向量</code></pre>
+        </details>
+
+        <details>
+          <summary>Task 7 — 计算余弦相似度</summary>
+          <p>相似度应在原始 embedding 空间计算，不要使用已经压缩到二维的 UMAP 坐标。</p>
+          <pre><code>import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+
+similarity = cosine_similarity(embeddings)
+
+query_index = 0
+scores = similarity[query_index].copy()
+scores[query_index] = -1  # 排除 passage 自己
+
+# argsort 后取最后五个，再反转为从高到低。
+neighbor_indices = np.argsort(scores)[-5:][::-1]
+for index in neighbor_indices:
+    print(df.iloc[index]["passage_id"], scores[index])</code></pre>
+        </details>
+
+        <details>
+          <summary>Task 8 — 用 UMAP 将 embedding 投影到二维</summary>
+          <p>UMAP 的 x、y 轴没有独立含义，主要解释局部邻近关系。</p>
+          <pre><code>import umap
+
+reducer = umap.UMAP(
+    n_components=2,
+    n_neighbors=15,
+    min_dist=0.15,
+    metric="cosine",
+    random_state=401       # 固定随机种子，便于复现布局
+)
+
+coords = reducer.fit_transform(embeddings)
+df["x"] = coords[:, 0]
+df["y"] = coords[:, 1]</code></pre>
+        </details>
+
+        <details>
+          <summary>Task 9 — 在原始 embedding 上聚类并人工命名</summary>
+          <p>KMeans 应作用于完整语义向量；查看代表段落和 TF-IDF 特征词后再命名 cluster。</p>
+          <pre><code>from sklearn.cluster import KMeans
+
+kmeans = KMeans(n_clusters=8, random_state=401, n_init="auto")
+df["cluster"] = kmeans.fit_predict(embeddings)
+
+for cluster_id in sorted(df["cluster"].unique()):
+    subset = df[df["cluster"] == cluster_id]
+    print(f"\nCLUSTER {cluster_id}")
+    for text in subset["text_clean"].head(10):
+        print("-", text)
+
+# 阅读代表文本后再建立名称映射，不能只看 cluster 编号。
+# 名称只是示例；真实名称必须来自对本次语料的人工检查。
+cluster_names = {
+    0: "Registration",
+    1: "Degree Requirements",
+    2: "Academic Integrity",
+    3: "Study Away",
+    4: "Student Support",
+    5: "Courses and Majors",
+    6: "Assessment",
+    7: "Campus Life"
+}
+df["cluster_name"] = df["cluster"].map(cluster_names)</code></pre>
+        </details>
+
+        <details>
+          <summary>Task 10 — 导出可视化需要的完整字段</summary>
+          <p>导出时同时保留正式层级、原文、统计量、主题和二维位置。</p>
+          <pre><code>output_columns = [
+    "passage_id", "chapter", "section", "subsection", "page",
+    "text", "text_clean", "word_count",
+    "cluster", "cluster_name", "x", "y"
+]
+
+df[output_columns].to_csv(
+    "../data/lab8_embedding_map.csv",
+    index=False
+)
+
+# 最近邻通常由后端预先计算；本演示为了在浏览器中即时计算，
+# 额外把向量转成普通 list 并写入 JSON。
+json_df = df[output_columns].copy()
+json_df["embedding"] = embeddings.tolist()
+json_df.to_json("task.json", orient="records", indent=2)</code></pre>
+        </details>
+
+        <details>
+          <summary>Task 11 — 读取 JSON 并绘制语义散点图</summary>
+          <p>每个 circle 对应一条 passage；位置、颜色、大小和描边分别编码不同变量。</p>
+          <pre><code>d3.json("task.json").then(data =&gt; {
+  const xScale = d3.scaleLinear()
+    .domain(d3.extent(data, d =&gt; d.x))
+    .range([margin.left, width - margin.right]);
+
+  const yScale = d3.scaleLinear()
+    .domain(d3.extent(data, d =&gt; d.y))
+    .range([height - margin.bottom, margin.top]);
+
+  points = svg.selectAll("circle.passage")
+    .data(data, d =&gt; d.passage_id)
+    .join("circle")
+    .attr("class", "passage")
+    .attr("cx", d =&gt; xScale(d.x))       // UMAP 横坐标
+    .attr("cy", d =&gt; yScale(d.y))       // UMAP 纵坐标
+    .attr("r", d =&gt; sizeScale(d.word_count))
+    .attr("fill", d =&gt; topicColor(d.cluster_name));
+});</code></pre>
+        </details>
+
+        <details>
+          <summary>Task 12 — 详情、搜索、筛选与缩放</summary>
+          <p>搜索、section 与 topic 条件同时生效；缩放只改变视图，不改变数据。</p>
+          <pre><code>function matchesFilters(d) {
+  const textMatch = d.text_clean.toLowerCase().includes(state.query);
+  const sectionMatch = state.section === "all" || d.section === state.section;
+  const topicMatch = state.topic === "all" || d.cluster_name === state.topic;
+  return textMatch &amp;&amp; sectionMatch &amp;&amp; topicMatch;
+}
+
+d3.select("#search").on("input", function () {
+  state.query = this.value.toLowerCase().trim();
+  updateViews();
+});
+
+const zoom = d3.zoom()
+  .scaleExtent([0.7, 8])
+  .on("zoom", event =&gt; pointsLayer.attr("transform", event.transform));
+
+svg.call(zoom);</code></pre>
+        </details>
+
+        <details>
+          <summary>Task 13 — 点击 passage 后寻找 5 个最近语义邻居</summary>
+          <p>本页在简化 embedding 上计算；真实作业应使用模型生成的完整向量。</p>
+          <pre><code>function cosineSimilarity(a, b) {
+  const dot = d3.sum(a.map((value, i) =&gt; value * b[i]));
+  const lengthA = Math.sqrt(d3.sum(a.map(value =&gt; value * value)));
+  const lengthB = Math.sqrt(d3.sum(b.map(value =&gt; value * value)));
+  return dot / (lengthA * lengthB);
+}
+
+function nearestNeighbors(selected, data, count = 5) {
+  return data
+    .filter(d =&gt; d.passage_id !== selected.passage_id)
+    .map(d =&gt; ({ ...d, similarity: cosineSimilarity(selected.embedding, d.embedding) }))
+    .sort((a, b) =&gt; d3.descending(a.similarity, b.similarity))
+    .slice(0, count);
+}</code></pre>
+        </details>
+
+        <details>
+          <summary>Task 14 — 动态汇总 Topic × Section 矩阵</summary>
+          <p>不需要第二份矩阵数据文件；可以直接从 passage 数据按两个字段计数。</p>
+          <pre><code>const counts = d3.rollup(
+  data,
+  rows =&gt; rows.length,
+  d =&gt; d.section,
+  d =&gt; d.cluster_name
+);
+
+const cells = d3.cross(sections, topics).map(([section, topic]) =&gt; ({
+  section,
+  topic,
+  count: counts.get(section)?.get(topic) ?? 0
+}));
+
+matrixSvg.selectAll("rect.cell")
+  .data(cells)
+  .join("rect")
+  .attr("fill", d =&gt; matrixColor(d.count));</code></pre>
+        </details>
+
+        <details>
+          <summary>Task 15 — 用共享状态协调散点图、矩阵和详情面板</summary>
+          <p>两个视图不各自维护选择；它们都读取同一个 state，再统一调用 updateViews。</p>
+          <pre><code>const state = {
+  selected: null,          // 当前选中的 passage
+  neighbors: new Set(),    // 最近邻 passage_id
+  matrixSelection: null    // 当前选中的 section-topic 单元格
+};
+
+function selectMatrixCell(cell) {
+  state.selected = null;
+  state.neighbors.clear();
+  state.matrixSelection = cell;
+  updateViews();           // 同时更新散点透明度和矩阵描边
+}
+
+function selectPassage(passage) {
+  state.selected = passage;
+  state.neighbors = new Set(
+    nearestNeighbors(passage, data).map(d =&gt; d.passage_id)
+  );
+  updateViews();           // 同时突出散点与所属矩阵单元格
+}</code></pre>
+        </details>
+      </div>
+    </section>
+
+    <a class="footer" href="index.html">← 返回 Lab 8 页面</a>
+  </main>
+
+  <div id="tooltip" class="tooltip" role="tooltip"></div>
+  <script src="d3.v7.min.js"></script>
+  <script>
+    // ================================================================
+    // Lab 8 教学演示脚本
+    // 注意：task.json 的 embedding 与二维坐标均为教学用简化数据。
+    // ================================================================
+
+    // ===== Task 11–15：共享状态让搜索、筛选、散点和矩阵保持同步 =====
+    const state = {
+      data: [],
+      query: "",
+      section: "all",
+      topic: "all",
+      selected: null,
+      neighbors: new Set(),
+      matrixSelection: null
+    };
+
+    const tooltip = d3.select("#tooltip");
+    const topicColor = d3.scaleOrdinal(d3.schemeTableau10);
+    const sectionColor = d3.scaleOrdinal(d3.schemeSet2);
+    let points;
+    let matrixCells;
+    let mapSvg;
+    let zoomBehavior;
+
+    // ===== Task 11：读取 task.json，并保证数值字段是 JavaScript Number =====
+    d3.json("task.json")
+      .then(rawData => {
+        state.data = rawData.map(d => ({
+          ...d,
+          page: +d.page,
+          word_count: +d.word_count,
+          cluster: +d.cluster,
+          x: +d.x,
+          y: +d.y,
+          embedding: d.embedding.map(Number)
+        }));
+
+        // 固定 domain，确保散点、图例和筛选器使用完全相同的类别顺序。
+        const topics = [...new Set(state.data.map(d => d.cluster_name))];
+        const sections = [...new Set(state.data.map(d => d.section))];
+        topicColor.domain(topics);
+        sectionColor.domain(sections);
+
+        renderStatistics();
+        buildControls(sections, topics);
+        drawSemanticMap();
+        drawMatrix(sections, topics);
+        renderLegends(topics, sections);
+        updateViews();
+      })
+      .catch(error => {
+        d3.select("#map-status")
+          .attr("class", "status empty")
+          .text(`读取 task.json 失败：${error.message}。请通过本地 HTTP 服务器打开页面。`);
+      });
+
+    // ===== Task 4：从加载后的 passage 数据计算四个语料概览指标 =====
+    function renderStatistics() {
+      const sections = new Set(state.data.map(d => d.section));
+      const topics = new Set(state.data.map(d => d.cluster_name));
+      const average = d3.mean(state.data, d => d.word_count);
+
+      d3.select("#passage-count").text(state.data.length);
+      d3.select("#section-count").text(sections.size);
+      d3.select("#topic-count").text(topics.size);
+      d3.select("#average-length").text(`${d3.format(".1f")(average)} 词`);
+    }
+
+    // ===== Task 12：生成两个下拉筛选器，并监听所有控制项 =====
+    function buildControls(sections, topics) {
+      d3.select("#section-filter")
+        .selectAll("option.section-option")
+        .data(sections)
+        .join("option")
+        .attr("class", "section-option")
+        .attr("value", d => d)
+        .text(d => d);
+
+      d3.select("#topic-filter")
+        .selectAll("option.topic-option")
+        .data(topics)
+        .join("option")
+        .attr("class", "topic-option")
+        .attr("value", d => d)
+        .text(d => d);
+
+      d3.select("#search").on("input", function () {
+        state.query = this.value.toLowerCase().trim();
+        updateViews();
+      });
+
+      d3.select("#section-filter").on("change", function () {
+        state.section = this.value;
+        updateViews();
+      });
+
+      d3.select("#topic-filter").on("change", function () {
+        state.topic = this.value;
+        updateViews();
+      });
+
+      d3.select("#reset-zoom").on("click", () => {
+        mapSvg.transition().duration(450).call(zoomBehavior.transform, d3.zoomIdentity);
+      });
+
+      d3.select("#clear-all").on("click", clearAll);
+    }
+
+    // ===== Task 11：建立二维比例尺并绘制一条 passage 对应一个圆点 =====
+    function drawSemanticMap() {
+      const width = 880;
+      const height = 560;
+      const margin = { top: 38, right: 28, bottom: 58, left: 68 };
+
+      const xScale = d3.scaleLinear()
+        .domain(d3.extent(state.data, d => d.x)).nice()
+        .range([margin.left, width - margin.right]);
+
+      const yScale = d3.scaleLinear()
+        .domain(d3.extent(state.data, d => d.y)).nice()
+        .range([height - margin.bottom, margin.top]);
+
+      const sizeScale = d3.scaleSqrt()
+        .domain(d3.extent(state.data, d => d.word_count))
+        .range([5.5, 11]);
+
+      mapSvg = d3.select("#semantic-map")
+        .append("svg")
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .attr("role", "img")
+        .attr("aria-label", "教学示例 passage 的二维语义散点图");
+
+      mapSvg.append("rect")
+        .attr("x", margin.left)
+        .attr("y", margin.top)
+        .attr("width", width - margin.left - margin.right)
+        .attr("height", height - margin.top - margin.bottom)
+        .attr("fill", "#f8fafc")
+        .attr("stroke", "#dbe3ee");
+
+      const xAxis = mapSvg.append("g")
+        .attr("class", "axis")
+        .attr("transform", `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(xScale).ticks(7));
+
+      const yAxis = mapSvg.append("g")
+        .attr("class", "axis")
+        .attr("transform", `translate(${margin.left},0)`)
+        .call(d3.axisLeft(yScale).ticks(7));
+
+      mapSvg.append("text")
+        .attr("x", width / 2)
+        .attr("y", height - 16)
+        .attr("text-anchor", "middle")
+        .attr("fill", "#64748b")
+        .attr("font-size", 12)
+        .text("UMAP 1（轴本身无独立语义）");
+
+      mapSvg.append("text")
+        .attr("transform", `translate(18,${height / 2}) rotate(-90)`)
+        .attr("text-anchor", "middle")
+        .attr("fill", "#64748b")
+        .attr("font-size", 12)
+        .text("UMAP 2（轴本身无独立语义）");
+
+      // clipPath 防止缩放和平移后的圆点跑出绘图区。
+      mapSvg.append("defs").append("clipPath")
+        .attr("id", "map-clip")
+        .append("rect")
+        .attr("x", margin.left)
+        .attr("y", margin.top)
+        .attr("width", width - margin.left - margin.right)
+        .attr("height", height - margin.top - margin.bottom);
+
+      const pointsLayer = mapSvg.append("g")
+        .attr("clip-path", "url(#map-clip)");
+
+      points = pointsLayer.selectAll("circle.passage")
+        .data(state.data, d => d.passage_id)
+        .join("circle")
+        .attr("class", "passage")
+        .attr("cx", d => xScale(d.x))
+        .attr("cy", d => yScale(d.y))
+        .attr("r", d => sizeScale(d.word_count))
+        .attr("fill", d => topicColor(d.cluster_name))
+        .attr("stroke", d => sectionColor(d.section))
+        .attr("stroke-width", 2)
+        .style("cursor", "pointer")
+        .on("mouseenter", showPassageTooltip)
+        .on("mousemove", moveTooltip)
+        .on("mouseleave", hideTooltip)
+        .on("click", (event, d) => {
+          event.stopPropagation();
+          selectPassage(d);
+        });
+
+      // ===== Task 12：缩放时同时更新圆点位置和坐标轴 =====
+      zoomBehavior = d3.zoom()
+        .scaleExtent([0.7, 8])
+        .translateExtent([[0, 0], [width, height]])
+        .extent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]])
+        .on("zoom", event => {
+          const transformedX = event.transform.rescaleX(xScale);
+          const transformedY = event.transform.rescaleY(yScale);
+          xAxis.call(d3.axisBottom(transformedX).ticks(7));
+          yAxis.call(d3.axisLeft(transformedY).ticks(7));
+          points
+            .attr("cx", d => transformedX(d.x))
+            .attr("cy", d => transformedY(d.y));
+        });
+
+      mapSvg.call(zoomBehavior).on("dblclick.zoom", null);
+      mapSvg.on("click", () => {
+        state.selected = null;
+        state.neighbors.clear();
+        updateViews();
+        showDefaultDetail();
+      });
+    }
+
+    // ===== Task 14：从 passage 资料实时汇总 section-topic 计数 =====
+    function drawMatrix(sections, topics) {
+      const width = 980;
+      const height = 530;
+      const margin = { top: 155, right: 34, bottom: 52, left: 205 };
+
+      const counts = d3.rollup(
+        state.data,
+        rows => rows.length,
+        d => d.section,
+        d => d.cluster_name
+      );
+
+      const cells = d3.cross(sections, topics).map(([section, topic]) => ({
+        section,
+        topic,
+        count: counts.get(section)?.get(topic) ?? 0
+      }));
+
+      const x = d3.scaleBand()
+        .domain(topics)
+        .range([margin.left, width - margin.right])
+        .padding(0.08);
+
+      const y = d3.scaleBand()
+        .domain(sections)
+        .range([margin.top, height - margin.bottom])
+        .padding(0.08);
+
+      const matrixColor = d3.scaleSequential()
+        .domain([0, d3.max(cells, d => d.count) || 1])
+        .interpolator(d3.interpolateBlues);
+
+      const svg = d3.select("#matrix")
+        .append("svg")
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .attr("role", "img")
+        .attr("aria-label", "语义主题与正式 section 的 passage 数量矩阵");
+
+      svg.append("g")
+        .attr("class", "axis")
+        .attr("transform", `translate(0,${margin.top})`)
+        .call(d3.axisTop(x).tickSize(0))
+        .call(group => group.selectAll("text")
+          .attr("text-anchor", "start")
+          .attr("transform", "rotate(-36)")
+          .attr("dx", 8)
+          .attr("dy", -2));
+
+      svg.append("g")
+        .attr("class", "axis")
+        .attr("transform", `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y).tickSize(0));
+
+      matrixCells = svg.append("g")
+        .selectAll("rect.cell")
+        .data(cells, d => `${d.section}|${d.topic}`)
+        .join("rect")
+        .attr("class", "cell")
+        .attr("x", d => x(d.topic))
+        .attr("y", d => y(d.section))
+        .attr("width", x.bandwidth())
+        .attr("height", y.bandwidth())
+        .attr("rx", 4)
+        .attr("fill", d => d.count === 0 ? "#f1f5f9" : matrixColor(d.count))
+        .attr("stroke", "#ffffff")
+        .attr("stroke-width", 2)
+        .on("mouseenter", (event, d) => {
+          tooltip
+            .style("opacity", 1)
+            .html(`<strong>${escapeHtml(d.section)}</strong><br>Topic：${escapeHtml(d.topic)}<br>Passage 数量：${d.count}`);
+          moveTooltip(event);
+        })
+        .on("mousemove", moveTooltip)
+        .on("mouseleave", hideTooltip)
+        .on("click", (event, d) => {
+          event.stopPropagation();
+          selectMatrixCell(d);
+        });
+
+      svg.append("g")
+        .selectAll("text.cell-count")
+        .data(cells)
+        .join("text")
+        .attr("class", "cell-count")
+        .attr("x", d => x(d.topic) + x.bandwidth() / 2)
+        .attr("y", d => y(d.section) + y.bandwidth() / 2 + 4)
+        .attr("text-anchor", "middle")
+        .attr("font-size", 12)
+        .attr("font-weight", 800)
+        .attr("fill", d => d.count > 1 ? "white" : "#475569")
+        .attr("pointer-events", "none")
+        .text(d => d.count);
+    }
+
+    function renderLegends(topics, sections) {
+      const legend = d3.select("#topic-legend");
+
+      legend.append("strong").text("填充色 = Topic：");
+      legend.selectAll("span.topic-legend-item")
+        .data(topics)
+        .join("span")
+        .attr("class", "legend-item topic-legend-item")
+        .html(d => `<span class="swatch" style="background:${topicColor(d)}"></span>${escapeHtml(d)}`);
+
+      legend.append("strong").style("margin-left", "8px").text("外框色 = Section：");
+      legend.selectAll("span.section-legend-item")
+        .data(sections)
+        .join("span")
+        .attr("class", "legend-item section-legend-item")
+        .html(d => `<span class="swatch" style="background:white;border:3px solid ${sectionColor(d)}"></span>${escapeHtml(d)}`);
+    }
+
+    // ===== Task 12：判断一条 passage 是否符合三个组合筛选条件 =====
+    function matchesFilters(d) {
+      const haystack = `${d.text_clean} ${d.chapter} ${d.section} ${d.subsection} ${d.cluster_name}`.toLowerCase();
+      const textMatch = state.query === "" || haystack.includes(state.query);
+      const sectionMatch = state.section === "all" || d.section === state.section;
+      const topicMatch = state.topic === "all" || d.cluster_name === state.topic;
+      return textMatch && sectionMatch && topicMatch;
+    }
+
+    function matchesMatrixSelection(d) {
+      if (!state.matrixSelection) return true;
+      return d.section === state.matrixSelection.section
+        && d.cluster_name === state.matrixSelection.topic;
+    }
+
+    // ===== Task 13：在原始简化向量上计算 cosine similarity =====
+    function cosineSimilarity(a, b) {
+      const dot = d3.sum(a.map((value, index) => value * b[index]));
+      const lengthA = Math.sqrt(d3.sum(a.map(value => value * value)));
+      const lengthB = Math.sqrt(d3.sum(b.map(value => value * value)));
+      return lengthA && lengthB ? dot / (lengthA * lengthB) : 0;
+    }
+
+    function nearestNeighbors(selected, count = 5) {
+      return state.data
+        .filter(d => d.passage_id !== selected.passage_id)
+        .map(d => ({ ...d, similarity: cosineSimilarity(selected.embedding, d.embedding) }))
+        .sort((a, b) => d3.descending(a.similarity, b.similarity))
+        .slice(0, count);
+    }
+
+    // ===== Task 13 + 15：选择 passage，计算最近邻并同步标记矩阵 =====
+    function selectPassage(passage) {
+      state.selected = passage;
+      state.matrixSelection = null;
+      const neighbors = nearestNeighbors(passage);
+      state.neighbors = new Set(neighbors.map(d => d.passage_id));
+      renderPassageDetail(passage, neighbors);
+      updateViews();
+    }
+
+    // ===== Task 15：矩阵选择会反向控制语义地图的高亮 =====
+    function selectMatrixCell(cell) {
+      const sameCell = state.matrixSelection
+        && state.matrixSelection.section === cell.section
+        && state.matrixSelection.topic === cell.topic;
+
+      state.matrixSelection = sameCell ? null : cell;
+      state.selected = null;
+      state.neighbors.clear();
+
+      if (state.matrixSelection) {
+        const passages = state.data.filter(matchesMatrixSelection);
+        renderMatrixDetail(cell, passages);
+      } else {
+        showDefaultDetail();
+      }
+      updateViews();
+    }
+
+    // ===== Task 15：所有视图统一读取 state，避免各自状态互相冲突 =====
+    function updateViews() {
+      if (!points || !matrixCells) return;
+
+      const visibleRows = state.data.filter(d => matchesFilters(d) && matchesMatrixSelection(d));
+      const visibleIds = new Set(visibleRows.map(d => d.passage_id));
+
+      points
+        .attr("opacity", d => {
+          if (!visibleIds.has(d.passage_id)) return 0.07;
+          if (!state.selected) return 0.88;
+          if (d.passage_id === state.selected.passage_id) return 1;
+          if (state.neighbors.has(d.passage_id)) return 0.92;
+          return 0.18;
+        })
+        .attr("stroke", d => {
+          if (state.selected?.passage_id === d.passage_id) return "#0f172a";
+          if (state.neighbors.has(d.passage_id)) return "#f59e0b";
+          return sectionColor(d.section);
+        })
+        .attr("stroke-width", d => {
+          if (state.selected?.passage_id === d.passage_id) return 4;
+          if (state.neighbors.has(d.passage_id)) return 3;
+          return 2;
+        });
+
+      matrixCells
+        .attr("stroke", d => {
+          const selectedPassageCell = state.selected
+            && state.selected.section === d.section
+            && state.selected.cluster_name === d.topic;
+          const selectedMatrixCell = state.matrixSelection
+            && state.matrixSelection.section === d.section
+            && state.matrixSelection.topic === d.topic;
+          return selectedPassageCell || selectedMatrixCell ? "#f59e0b" : "#ffffff";
+        })
+        .attr("stroke-width", d => {
+          const active = (state.selected && state.selected.section === d.section && state.selected.cluster_name === d.topic)
+            || (state.matrixSelection && state.matrixSelection.section === d.section && state.matrixSelection.topic === d.topic);
+          return active ? 5 : 2;
+        })
+        .attr("opacity", d => {
+          const sectionMatch = state.section === "all" || d.section === state.section;
+          const topicMatch = state.topic === "all" || d.topic === state.topic;
+          return sectionMatch && topicMatch ? 1 : 0.25;
+        });
+
+      const status = visibleRows.length === 0
+        ? "没有 passage 同时满足当前条件，请调整搜索或筛选器。"
+        : `当前突出显示 ${visibleRows.length} / ${state.data.length} 条 passage。`;
+      d3.select("#map-status")
+        .attr("class", visibleRows.length === 0 ? "status empty" : "status")
+        .text(status);
+
+      if (state.matrixSelection) {
+        d3.select("#matrix-status").text(
+          `已选择：${state.matrixSelection.section} × ${state.matrixSelection.topic}；再次点击同一单元格可取消。`
+        );
+      } else if (state.selected) {
+        d3.select("#matrix-status").text(
+          `橙色边框标出所选 passage 对应的单元格：${state.selected.section} × ${state.selected.cluster_name}。`
+        );
+      } else {
+        d3.select("#matrix-status").text("点击任意单元格，可在上方语义地图中突出对应 passage。");
+      }
+    }
+
+    function renderPassageDetail(passage, neighbors) {
+      const neighborItems = neighbors.map(d => (
+        `<li><strong>${escapeHtml(d.passage_id)}</strong> · ${escapeHtml(d.section)} · `
+        + `相似度 ${d3.format(".3f")(d.similarity)}</li>`
+      )).join("");
+
+      d3.select("#detail-panel").html(`
+        <h3>${escapeHtml(passage.passage_id)} · ${escapeHtml(passage.section)}</h3>
+        <dl>
+          <dt>Chapter</dt><dd>${escapeHtml(passage.chapter)}</dd>
+          <dt>Section</dt><dd>${escapeHtml(passage.section)}</dd>
+          <dt>Subsection</dt><dd>${escapeHtml(passage.subsection)}</dd>
+          <dt>Page</dt><dd>${passage.page}</dd>
+          <dt>Topic</dt><dd>${escapeHtml(passage.cluster_name)}</dd>
+          <dt>词数</dt><dd>${passage.word_count}</dd>
+        </dl>
+        <div class="passage-text">${escapeHtml(passage.text)}</div>
+        <h3 style="margin-top:16px">最近的 5 个语义邻居</h3>
+        <ol class="neighbor-list">${neighborItems}</ol>
+      `);
+    }
+
+    function renderMatrixDetail(cell, passages) {
+      const items = passages.map(d => (
+        `<li><strong>${escapeHtml(d.passage_id)}</strong> · Page ${d.page} · ${escapeHtml(d.subsection)}</li>`
+      )).join("");
+
+      d3.select("#detail-panel").html(`
+        <h3>矩阵单元格选择</h3>
+        <dl>
+          <dt>Section</dt><dd>${escapeHtml(cell.section)}</dd>
+          <dt>Topic</dt><dd>${escapeHtml(cell.topic)}</dd>
+          <dt>数量</dt><dd>${passages.length}</dd>
+        </dl>
+        <p class="muted">语义地图中符合这个正式 section 与语义 topic 组合的圆点已被突出。</p>
+        <ol class="neighbor-list">${items || "<li>这个组合没有 passage。</li>"}</ol>
+      `);
+    }
+
+    function showDefaultDetail() {
+      d3.select("#detail-panel").html(`
+        <h3>段落详细信息</h3>
+        <p class="muted">点击一个圆点查看原始结构、完整文本及余弦相似度最高的 5 个段落。</p>
+      `);
+    }
+
+    function clearAll() {
+      state.query = "";
+      state.section = "all";
+      state.topic = "all";
+      state.selected = null;
+      state.neighbors.clear();
+      state.matrixSelection = null;
+
+      d3.select("#search").property("value", "");
+      d3.select("#section-filter").property("value", "all");
+      d3.select("#topic-filter").property("value", "all");
+      showDefaultDetail();
+      updateViews();
+    }
+
+    function showPassageTooltip(event, d) {
+      tooltip
+        .style("opacity", 1)
+        .html(
+          `<strong>${escapeHtml(d.passage_id)} · ${escapeHtml(d.cluster_name)}</strong><br>`
+          + `${escapeHtml(d.section)} / ${escapeHtml(d.subsection)}<br>`
+          + `Page ${d.page} · ${d.word_count} words`
+        );
+      moveTooltip(event);
+    }
+
+    function moveTooltip(event) {
+      tooltip
+        .style("left", `${event.clientX + 14}px`)
+        .style("top", `${event.clientY + 14}px`);
+    }
+
+    function hideTooltip() {
+      tooltip.style("opacity", 0);
+    }
+
+    // 将动态文字转换为安全 HTML；即使以后换成外部数据也不会直接插入标签。
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+  </script>
+</body>
+</html>
