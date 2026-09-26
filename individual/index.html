@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A critique and D3 redesign of the OECD Better Life Index flower chart.">
+  <link rel="icon" href="data:,">
+  <title>Visualization Critique and Redesign | STATS 401</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <header class="hero">
+      <nav class="top-nav" aria-label="Page navigation">
+        <a href="../index.html">← All course work</a>
+        <a href="#redesign">Interactive redesign</a>
+        <a href="#report">Written report</a>
+      </nav>
+      <p class="eyebrow">STATS 401 · INDIVIDUAL PROJECT</p>
+      <h1>Visualization Critique and Redesign</h1>
+      <p class="hero-summary">Replacing decorative radial comparison with aligned visual encodings—while keeping country performance separate from personal priorities.</p>
+    </header>
+
+    <section class="intro-grid" aria-labelledby="original-heading">
+      <div class="intro-copy">
+        <p class="section-number">01 · ORIGINAL VISUALIZATION</p>
+        <h2 id="original-heading">OECD Better Life Index</h2>
+        <p>The Better Life Index invites members of the public to compare 38 OECD countries across 11 dimensions of current well-being. Its flower glyphs turn each country into a memorable profile: petal length represents performance, petal width represents the importance assigned by the viewer, and flower height represents a preference-weighted overall score.</p>
+        <p>The intended tasks are exploratory—express personal priorities, see how rankings respond, and notice broad differences among countries. The original is engaging, but its radial geometry makes precise country-to-country comparisons difficult.</p>
+        <p class="source-line"><strong>Source:</strong> <a href="https://www.oecd.org/en/data/tools/well-being-data-monitor/better-life-index.html" target="_blank" rel="noopener">OECD Better Life Index</a>, accessed September 26, 2026.</p>
+      </div>
+      <figure class="original-figure">
+        <a href="image.png" target="_blank" aria-label="Open the original visualization screenshot at full size">
+          <img src="image.png" alt="Screenshot of the OECD Better Life Index showing priority sliders and one multicolored flower glyph per country.">
+        </a>
+        <figcaption><strong>Figure 1.</strong> The original flower chart. Each petal combines a country score with a user-assigned priority.</figcaption>
+      </figure>
+    </section>
+
+    <section id="redesign" class="visualization-section" aria-labelledby="redesign-heading">
+      <div class="section-heading">
+        <div>
+          <p class="section-number">02 · INTERACTIVE REDESIGN</p>
+          <h2 id="redesign-heading">Aligned comparison, personalized ranking</h2>
+        </div>
+        <p>Cell color always shows country performance. Priorities affect only the weighted overall score and never alter the heatmap.</p>
+      </div>
+
+      <section class="priority-panel" aria-labelledby="priority-heading">
+        <div class="panel-heading">
+          <div>
+            <p class="mini-kicker">STEP 1</p>
+            <h3 id="priority-heading">Set your priorities</h3>
+          </div>
+          <button id="reset-weights" class="secondary-button" type="button">Reset to equal weights</button>
+        </div>
+        <p class="panel-note">Rate each dimension from 0 (not important) to 10 (most important). All priorities begin at 5.</p>
+        <div id="priority-controls" class="priority-grid"></div>
+      </section>
+
+      <section class="heatmap-panel" aria-labelledby="heatmap-heading">
+        <div class="panel-heading heatmap-heading-row">
+          <div>
+            <p class="mini-kicker">STEP 2</p>
+            <h3 id="heatmap-heading">Compare and rank countries</h3>
+          </div>
+          <label class="sort-control" for="sort-select">
+            <span>Sort by</span>
+            <select id="sort-select"></select>
+          </label>
+        </div>
+        <p class="panel-note">Darker cells indicate higher normalized performance. Hover or focus a cell for its exact value; select a row to inspect that country.</p>
+        <div class="legend-row" aria-label="Heatmap color legend">
+          <span>Lower performance</span>
+          <div id="heatmap-legend"></div>
+          <span>Higher performance</span>
+        </div>
+        <div id="heatmap-scroll" class="chart-scroll">
+          <div id="heatmap" aria-live="polite"></div>
+        </div>
+        <p id="heatmap-status" class="chart-status" aria-live="polite">Loading the OECD data…</p>
+      </section>
+
+      <section class="detail-panel" aria-labelledby="detail-heading">
+        <div class="detail-title-row">
+          <div>
+            <p class="mini-kicker">STEP 3 · COUNTRY DETAIL</p>
+            <h3 id="detail-heading">Finland</h3>
+          </div>
+          <div class="overall-readout">
+            <span>Preference-weighted overall</span>
+            <strong id="detail-overall">—</strong>
+          </div>
+        </div>
+        <p id="detail-summary" class="panel-note" aria-live="polite">Select a country in the heatmap to update this common-scale profile.</p>
+        <div class="chart-scroll detail-scroll">
+          <div id="detail-chart"></div>
+        </div>
+      </section>
+    </section>
+
+    <section id="report" class="report-section" aria-labelledby="report-heading">
+      <div class="section-heading report-heading">
+        <div>
+          <p class="section-number">03 · WRITTEN REPORT</p>
+          <h2 id="report-heading">Critique and redesign rationale</h2>
+        </div>
+        <p>Report length: <span id="report-word-count">calculating…</span></p>
+      </div>
+
+      <article id="report-copy" class="report-copy">
+        <h3>Original visualization and context</h3>
+        <p>The OECD Better Life Index is an interactive public-facing visualization of well-being across 38 OECD countries. Its current version summarizes 11 dimensions—housing, income and wealth, work and job quality, social connections, knowledge and skills, environmental quality, civic engagement, health, subjective well-being, safety, and work-life balance—on normalized scales from 0 to 10. The intended message is that national well-being is multidimensional and that the “best” country depends partly on what an individual values. Its audience is a broad public rather than statistical specialists. Viewers should be able to express priorities, compare countries, examine multidimensional profiles, and see how different priorities change a composite ranking.</p>
+
+        <h3>Strengths and weaknesses</h3>
+        <p>The original has two important strengths. First, the flower metaphor is memorable and inviting. Eleven colored petals make the abstract idea of multidimensional well-being feel personal, and the unusual form can encourage exploration. Second, the priority sliders provide meaningful interaction. They show that a composite index is constructed rather than inevitable, and the animated reordering gives immediate feedback when a viewer changes a value.</p>
+        <p>However, the design is weak for comparison. Petals radiate in different directions and have no shared baseline, so comparing Finland and Denmark on health requires judging lengths at separate angles. Position along a common scale would support more accurate comparison. A second problem is that each petal carries two quantities: length encodes country performance while angular width responds to user priority. A large petal can therefore mean a strong outcome, a high priority, or both. The display blends evidence about the country with a preference supplied by the user.</p>
+        <p>Third, ranking is unnecessarily difficult. To answer “Which country performs best on work-life balance?” a viewer must find the same colored petal in every flower and compare dozens of radial lengths. Even when countries are sorted by an overall score, the relevant dimension is not aligned. Fourth, the chart becomes visually crowded as the number of countries grows. Thirty-eight glyphs, each with 11 colored petals, create hundreds of marks. Country labels, stems, colors, shapes, and vertical position compete for attention, increasing search time and making close values hard to distinguish.</p>
+
+        <h3>Redesign rationale</h3>
+        <p>The redesign makes four connected changes. First, it replaces flowers with a heatmap in which rows are countries and columns are well-being dimensions. Every score occupies an aligned rectangular grid and uses the same fixed 0–10 color scale. A viewer can scan across a row for a country profile or down a column for international comparison. Exact values remain available on demand without filling every cell with text.</p>
+        <p>Second, it separates performance from preference. Heatmap colors always encode OECD performance scores. Priority sliders feed only a clearly labeled weighted-overall calculation, so changing a preference cannot make the underlying evidence appear better or worse. Third, the sort control supports all 11 dimensions plus the weighted overall score. Reordering countries from high to low converts a slow visual search into a direct ranking task, while highlighting the active column preserves context. Finally, selecting a country opens a horizontal dot plot. All 11 dots share a zero-to-ten axis, making within-country strengths and weaknesses more precise than radial petals.</p>
+
+        <h3>Original versus redesign</h3>
+        <p>The new view makes several tasks easier: finding the highest or lowest country for one dimension, comparing two countries on the same measure, spotting broad cross-country patterns, and inspecting one country on a common scale. It also makes the role of personal priorities explicit and limited to the composite score. The redesign does sacrifice some of the original’s playfulness and emotional appeal. Heatmap color is less precise than position, so exact values still require the tooltip or detail plot. In addition, normalized scores hide the original units and depend on the countries and indicators included in this 2026 version. OECD notes that versions of the Better Life Index are not directly comparable when indicators and calculation assumptions change. The redesign therefore improves comparison within this snapshot, not historical comparison across versions.</p>
+      </article>
+
+      <figure class="redesign-figure">
+        <img src="redesign.png" alt="Static screenshot of the redesigned Better Life Index heatmap, sorted by the equal-weight overall score with Finland selected.">
+        <figcaption><strong>Figure 2.</strong> Default redesign heatmap: equal priorities, overall ranking, and Finland selected. The live version above supports sorting and country detail exploration.</figcaption>
+      </figure>
+    </section>
+
+    <section class="references" aria-labelledby="references-heading">
+      <p class="section-number">04 · SOURCES</p>
+      <h2 id="references-heading">Data and references</h2>
+      <ol>
+        <li>OECD (2026), <a href="https://www.oecd.org/en/data/tools/well-being-data-monitor/better-life-index.html" target="_blank" rel="noopener"><em>The Better Life Index</em></a>, accessed September 26, 2026.</li>
+        <li>OECD WISE, <a href="https://github.com/wise-oecd/wise-better-life-index/blob/main/data.tsv" target="_blank" rel="noopener">Better Life Index normalized country scores</a>, 2026 snapshot.</li>
+        <li>OECD, <a href="https://www.oecd.org/en/data/tools/well-being-data-monitor.html#faq" target="_blank" rel="noopener">Well-being Data Monitor methodology and FAQ</a>, including weighting, normalization, aggregation, and imputation notes.</li>
+      </ol>
+      <p class="disclaimer">This is an adaptation of an original work by the OECD. The opinions expressed and arguments employed in this adaptation should not be reported as representing the official views of the OECD or its Member Countries.</p>
+    </section>
+
+    <footer>
+      <span>STATS 401 · Jietong Zhou</span>
+      <a href="../index.html">Back to all course work</a>
+    </footer>
+  </main>
+
+  <div id="tooltip" class="tooltip" role="tooltip" aria-hidden="true"></div>
+  <script src="../lab8/d3.v7.min.js"></script>
+  <script src="visualization.js"></script>
+</body>
+</html>
