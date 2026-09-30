@@ -1,1 +1,476 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Lab 9</title><link rel="stylesheet" href="../css/style.css"></head><body><main class="page-shell"><section class="card"><h1>Lab 9</h1><p>Lab 9 will be added here.</p><a href="../index.html">Back to home</a></section></main></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lab 9 | 2025 GDP Maps</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #182230;
+      --muted: #667085;
+      --line: #dce3ec;
+      --paper: #ffffff;
+      --background: #f5f7fa;
+      --blue: #176b87;
+      --blue-map: #3b82c4;
+      --missing: #e4e7ec;
+      --highlight: #f59e0b;
+      --danger: #b42318;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--background); font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+    main { width: min(1240px, calc(100% - 36px)); margin: 0 auto; padding: 36px 0 52px; }
+    a { color: var(--blue); }
+    h1, h2, h3, p { margin-top: 0; }
+    header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: end; margin-bottom: 20px; }
+    .eyebrow { margin-bottom: 7px; color: var(--blue); font-size: .76rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { margin-bottom: 10px; font-size: clamp(2rem, 5vw, 3.25rem); line-height: 1.05; letter-spacing: -.035em; }
+    .subtitle { max-width: 78ch; margin-bottom: 0; color: var(--muted); line-height: 1.65; }
+    .header-links { display: flex; gap: 14px; flex-wrap: wrap; justify-content: flex-end; }
+    .header-links a, .footer-link { font-size: .9rem; font-weight: 700; text-decoration: none; }
+    .header-links a:hover, .footer-link:hover { text-decoration: underline; }
+    .panel { border: 1px solid var(--line); border-radius: 14px; background: var(--paper); box-shadow: 0 7px 22px rgb(15 23 42 / 6%); }
+    .source-note { margin-bottom: 20px; padding: 16px 18px; color: #475467; font-size: .9rem; line-height: 1.65; }
+    .source-note strong { color: var(--ink); }
+    .map-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
+    .map-card { min-width: 0; overflow: hidden; }
+    .map-header { display: flex; min-height: 102px; padding: 18px 19px 14px; justify-content: space-between; gap: 14px; align-items: flex-start; border-bottom: 1px solid #edf0f4; }
+    .map-header h2 { margin-bottom: 5px; font-size: 1.22rem; }
+    .map-header p { margin-bottom: 0; color: var(--muted); font-size: .84rem; line-height: 1.52; }
+    button { min-height: 36px; padding: 7px 11px; color: #344054; border: 1px solid #cbd5e1; border-radius: 7px; background: #fff; font: inherit; font-size: .82rem; font-weight: 700; white-space: nowrap; cursor: pointer; }
+    button:hover { border-color: var(--blue); color: var(--blue); }
+    button:focus-visible, a:focus-visible { outline: 3px solid rgb(23 107 135 / 25%); outline-offset: 2px; }
+    .map-stage { position: relative; min-height: 360px; overflow: hidden; background: #fbfcfd; }
+    #choropleth, #cartogram svg { display: block; width: 100%; height: auto; }
+    #choropleth { touch-action: none; }
+    #cartogram { width: 100%; min-height: 360px; }
+    .graticule { fill: none; stroke: #dde5ec; stroke-width: .55; vector-effect: non-scaling-stroke; }
+    #cartogram .cartogram { width: 100%; }
+    #cartogram .float-tooltip-kap { display: none !important; }
+    .country, #cartogram path.feature { outline: none; vector-effect: non-scaling-stroke; transition: filter 100ms ease; }
+    .country { cursor: pointer; }
+    #cartogram path.feature { stroke: #fff; stroke-width: .7; cursor: pointer; }
+    .country:hover, .country:focus-visible, #cartogram path.feature:hover, #cartogram path.feature:focus-visible { filter: brightness(1.06); }
+    .country.is-active, #cartogram path.feature.is-active { stroke: var(--highlight) !important; stroke-width: 3 !important; filter: brightness(1.04) drop-shadow(0 0 1px rgb(0 0 0 / 45%)); }
+    .legend { min-height: 74px; padding: 8px 18px 15px; border-top: 1px solid #edf0f4; color: var(--muted); font-size: .76rem; }
+    .legend svg { display: block; width: min(100%, 360px); height: auto; overflow: visible; }
+    .legend-title { fill: var(--ink); font-size: 11px; font-weight: 750; }
+    .legend-key { display: flex; margin-top: 3px; gap: 15px; flex-wrap: wrap; }
+    .legend-key span { display: inline-flex; gap: 6px; align-items: center; }
+    .swatch { width: 12px; height: 12px; border: 1px solid #c5cbd3; border-radius: 2px; }
+    .swatch-data { background: linear-gradient(135deg, #9ecae1, #08519c); border-color: #4c86ad; }
+    .swatch-missing { background: var(--missing); }
+    .status { position: absolute; inset: 0; display: grid; padding: 24px; place-items: center; color: var(--muted); text-align: center; pointer-events: none; }
+    #page-status { min-height: 22px; margin: 11px 2px 25px; color: var(--muted); font-size: .82rem; }
+    .error-box { padding: 14px 16px; color: var(--danger); border: 1px solid #fecaca; border-radius: 9px; background: #fff1f2; font-weight: 650; }
+    .analysis { padding: 24px 27px; }
+    .analysis h2 { margin-bottom: 13px; font-size: 1.35rem; }
+    .analysis p { max-width: 95ch; color: #475467; line-height: 1.74; }
+    .analysis p:last-child { margin-bottom: 0; }
+    .tooltip { position: fixed; z-index: 50; width: max-content; max-width: min(270px, calc(100vw - 24px)); padding: 10px 12px; color: #fff; border-radius: 8px; background: rgb(24 34 48 / 96%); box-shadow: 0 9px 24px rgb(0 0 0 / 22%); font-size: .8rem; line-height: 1.55; opacity: 0; pointer-events: none; transition: opacity 90ms ease; }
+    .tooltip strong { font-size: .86rem; }
+    .tooltip .muted { color: #d0d5dd; }
+    .footer-link { display: inline-block; margin-top: 22px; }
+    @media (max-width: 920px) {
+      header, .map-grid { grid-template-columns: 1fr; }
+      .header-links { justify-content: flex-start; }
+      .map-header { min-height: 0; }
+      .map-stage, #cartogram { min-height: 300px; }
+    }
+    @media (max-width: 560px) {
+      main { width: min(100% - 20px, 1240px); padding-top: 24px; }
+      .map-header { display: block; }
+      .map-header button { margin-top: 12px; }
+      .analysis { padding: 21px 19px; }
+      .map-stage, #cartogram { min-height: 230px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <p class="eyebrow">STATS 401 · LAB 9 ASSIGNMENT</p>
+        <h1>2025 GDP: Choropleth vs. Cartogram</h1>
+        <p class="subtitle">Two coordinated world maps compare how color and geographic area communicate the size of the 50 largest economies by nominal GDP.</p>
+      </div>
+      <nav class="header-links" aria-label="Page links"><a href="demo.html">Tutorial demo</a><a href="../index.html">All labs</a></nav>
+    </header>
+
+    <section class="panel source-note"><strong>Dataset.</strong> Nominal GDP in 2025, current prices, billions of U.S. dollars, for the 50 largest economies. The values are based on the IMF <em>World Economic Outlook</em>, October 2025; observations may include IMF staff estimates and may be revised. Countries outside the supplied top-50 file are shown as <strong>no data</strong>, not zero GDP.</section>
+
+    <section class="map-grid" aria-label="Coordinated GDP maps">
+      <article class="panel map-card">
+        <div class="map-header"><div><h2>1. GDP Choropleth</h2><p>Color represents GDP on a logarithmic scale. Drag to pan and scroll to zoom.</p></div><button id="reset-zoom" type="button">Reset zoom</button></div>
+        <div class="map-stage"><svg id="choropleth" viewBox="0 0 720 430" role="img" aria-label="World choropleth map of 2025 nominal GDP"></svg><div id="choropleth-status" class="status">Loading map data…</div></div>
+        <div id="choropleth-legend" class="legend" aria-label="GDP color legend"></div>
+      </article>
+
+      <article class="panel map-card">
+        <div class="map-header"><div><h2>2. GDP Cartogram</h2><p><strong>Area represents GDP;</strong> darker color reinforces larger values.</p></div></div>
+        <div class="map-stage"><div id="cartogram" role="img" aria-label="World cartogram sized by 2025 nominal GDP"></div><div id="cartogram-status" class="status">Preparing cartogram…</div></div>
+        <div class="legend"><div class="legend-key"><span><i class="swatch swatch-data"></i>Area = GDP; darker = larger GDP</span><span><i class="swatch swatch-missing"></i>No data in the supplied file</span></div><p>Rendered with <a href="https://github.com/vasturiano/cartogram-chart" target="_blank" rel="noopener">cartogram-chart</a> (20 iterations). Detached U.S. components are omitted from the distorted outline to prevent antimeridian stretching; GDP remains the national total.</p></div>
+      </article>
+    </section>
+
+    <p id="page-status" aria-live="polite">Loading 50 GDP records and world boundaries…</p>
+
+    <section class="panel analysis">
+      <h2>3. Design and Comparison</h2>
+      <div id="comparison-text">
+        <p>In the choropleth, the United States and China receive the darkest colors because their GDP values are far above the rest. The logarithmic color scale is appropriate because the dataset ranges from roughly $300 billion to more than $30 trillion; a linear scale would make most economies look nearly identical. Large countries such as Canada, Russia, and Australia still occupy substantial screen space, however, so geographic size can compete with the color signal.</p>
+        <p>The cartogram makes economic magnitude more immediate. The United States and China expand dramatically, while Germany, Japan, India, the United Kingdom, and France also become prominent. Canada, Russia, and Australia shrink relative to their land area, whereas geographically small economies such as Singapore and Hong Kong become easier to notice. The choropleth preserves familiar boundaries, locations, and neighborhood relationships, making it better for finding regional patterns and identifying where high-GDP economies are located. The cartogram sacrifices shape, distance, and geographic area, but it better supports comparisons of total economic size and concentration. Moving from color to area changes the emphasis: color communicates an ordered spatial pattern, while area makes the imbalance in global output feel physical. Neither view is universally better; each supports a different analytical task, and linked highlighting helps users match distorted countries to their original locations.</p>
+      </div>
+    </section>
+
+    <a class="footer-link" href="../index.html">← Back to all labs</a>
+  </main>
+  <div id="tooltip" class="tooltip" role="tooltip" aria-hidden="true"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cartogram-chart@1.4.4/dist/cartogram-chart.min.js"></script>
+  <script>
+    (() => {
+      "use strict";
+
+      const WIDTH = 720;
+      const HEIGHT = 430;
+      const CSV_URL = "lab9_gdp_2025_top50.csv";
+      const WORLD_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json";
+      const MISSING_COLOR = "#e4e7ec";
+
+      // world-atlas uses ISO 3166-1 numeric identifiers; the assignment CSV uses ISO-3.
+      const numericByIso3 = new Map(Object.entries({
+        USA: "840", CHN: "156", DEU: "276", JPN: "392", IND: "356",
+        GBR: "826", FRA: "250", ITA: "380", RUS: "643", CAN: "124",
+        BRA: "076", ESP: "724", MEX: "484", KOR: "410", AUS: "036",
+        TUR: "792", IDN: "360", NLD: "528", SAU: "682", POL: "616",
+        CHE: "756", TWN: "158", BEL: "056", IRL: "372", ARG: "032",
+        SWE: "752", ISR: "376", SGP: "702", ARE: "784", AUT: "040",
+        THA: "764", NOR: "578", PHL: "608", VNM: "704", BGD: "050",
+        MYS: "458", DNK: "208", COL: "170", HKG: "344", ZAF: "710",
+        ROU: "642", PAK: "586", CZE: "203", IRN: "364", EGY: "818",
+        CHL: "152", PRT: "620", PER: "604", FIN: "246", KAZ: "398"
+      }));
+
+      const tooltip = document.querySelector("#tooltip");
+      const pageStatus = document.querySelector("#page-status");
+      const choroplethStatus = document.querySelector("#choropleth-status");
+      const cartogramStatus = document.querySelector("#cartogram-status");
+      let choroplethPaths = null;
+      let lockedIso3 = null;
+      let hoveredIso3 = null;
+
+      if (!window.d3 || !window.topojson || !window.Cartogram) {
+        showFatalError("A required visualization library could not be loaded. Check the network connection and reload the page.");
+        return;
+      }
+
+      initialize().catch(error => {
+        console.error(error);
+        showFatalError(error.message || "The visualization could not be created.");
+      });
+
+      async function initialize() {
+        const [rawRows, world] = await Promise.all([
+          d3.csv(CSV_URL, row => ({
+            iso3: String(row.iso3 || "").trim().toUpperCase(),
+            country: String(row.country || "").trim(),
+            gdp: Number(row.gdp_2025_billion_usd),
+            rank: Number(row.rank)
+          })),
+          d3.json(WORLD_URL)
+        ]);
+
+        validateInputs(rawRows, world);
+        const rowsByIso3 = new Map(rawRows.map(row => [row.iso3, row]));
+        const rowsByNumeric = new Map(rawRows.map(row => [numericByIso3.get(row.iso3), row]));
+
+        // Antarctica is not needed for this world-economic comparison.
+        world.objects.countries.geometries = world.objects.countries.geometries
+          .filter(geometry => normalizeNumericId(geometry.id) !== "010");
+
+        // A few territories can share a numeric code with a sovereign country.
+        // Select one primary geometry for each GDP row so its value is never counted twice.
+        const geometriesByNumeric = d3.group(
+          world.objects.countries.geometries,
+          geometry => normalizeNumericId(geometry.id)
+        );
+        const primaryGeometryByNumeric = new Map();
+        rowsByNumeric.forEach((row, numericId) => {
+          const candidates = geometriesByNumeric.get(numericId) || [];
+          const exactNameMatch = candidates.find(geometry => geometry.properties.name === row.country);
+          if (candidates.length) primaryGeometryByNumeric.set(numericId, exactNameMatch || candidates[0]);
+        });
+
+        world.objects.countries.geometries.forEach(geometry => {
+          const numericId = normalizeNumericId(geometry.id);
+          const row = rowsByNumeric.get(numericId) || null;
+          const stat = row && primaryGeometryByNumeric.get(numericId) === geometry ? row : null;
+          geometry.properties = { ...geometry.properties, numericId, iso3: stat ? stat.iso3 : null, stat };
+        });
+
+        const matchedIso3 = new Set(
+          world.objects.countries.geometries
+            .filter(geometry => geometry.properties.stat)
+            .map(geometry => geometry.properties.stat.iso3)
+        );
+        const unmatchedRows = rawRows.filter(row => !matchedIso3.has(row.iso3));
+        if (unmatchedRows.length) {
+          throw new Error(`Unmatched country identifiers: ${unmatchedRows.map(d => d.iso3).join(", ")}`);
+        }
+
+        const featureCollection = topojson.feature(world, world.objects.countries);
+        const minGdp = d3.min(rawRows, d => d.gdp);
+        const maxGdp = d3.max(rawRows, d => d.gdp);
+        const colorScale = d3.scaleSequentialLog(d3.interpolateBlues).domain([minGdp, maxGdp]);
+
+        // Use a cartogram-only copy so the choropleth keeps complete boundaries.
+        // The detached U.S. components cross the projection seam and otherwise
+        // pull the contiguous U.S. polygon into long horizontal bands.
+        const cartogramWorld = JSON.parse(JSON.stringify(world));
+        keepLargestPolygonComponent(cartogramWorld, "840");
+
+        drawChoropleth(featureCollection, colorScale);
+        drawColorLegend(colorScale, minGdp, maxGdp);
+        drawCartogram(cartogramWorld, featureCollection, minGdp * .01, colorScale);
+
+        choroplethStatus.style.display = "none";
+        pageStatus.textContent = `${rawRows.length} GDP records loaded and matched by geographic identifier. Values are in billions of current U.S. dollars.`;
+
+        document.addEventListener("keydown", event => {
+          if (event.key === "Escape") clearSelection();
+        });
+
+        if (rowsByIso3.size !== 50) {
+          throw new Error("The GDP lookup does not contain exactly 50 unique ISO-3 identifiers.");
+        }
+      }
+
+      function validateInputs(rows, world) {
+        if (rows.length !== 50) throw new Error(`Expected 50 GDP records, but loaded ${rows.length}.`);
+        const invalidRows = rows.filter(row => !/^[A-Z]{3}$/.test(row.iso3) || !row.country || !Number.isFinite(row.gdp) || row.gdp <= 0 || !Number.isInteger(row.rank) || row.rank < 1);
+        if (invalidRows.length) throw new Error(`Invalid GDP rows found for: ${invalidRows.map(d => d.iso3 || "unknown").join(", ")}`);
+        if (new Set(rows.map(d => d.iso3)).size !== rows.length) throw new Error("Duplicate ISO-3 identifiers were found in the GDP file.");
+        const missingMappings = rows.filter(row => !numericByIso3.has(row.iso3));
+        if (missingMappings.length) throw new Error(`Missing ISO numeric mappings for: ${missingMappings.map(d => d.iso3).join(", ")}`);
+        if (!world || !world.objects || !world.objects.countries) throw new Error("The world TopoJSON does not contain a countries object.");
+      }
+
+      function drawChoropleth(featureCollection, colorScale) {
+        const svg = d3.select("#choropleth");
+        const mapGroup = svg.append("g").attr("class", "map-layer");
+        const projection = d3.geoNaturalEarth1().fitExtent([[12, 12], [WIDTH - 12, HEIGHT - 18]], featureCollection);
+        const path = d3.geoPath(projection);
+
+        mapGroup.append("path").datum(d3.geoGraticule10()).attr("class", "graticule").attr("d", path);
+        choroplethPaths = mapGroup.selectAll("path.country")
+          .data(featureCollection.features, d => d.id)
+          .join("path")
+          .attr("class", "country")
+          .attr("d", path)
+          .attr("fill", d => d.properties.stat ? colorScale(d.properties.stat.gdp) : MISSING_COLOR)
+          .attr("stroke", "#fff")
+          .attr("stroke-width", .7)
+          .attr("tabindex", 0)
+          .attr("role", "button")
+          .attr("aria-label", countryAriaLabel)
+          .on("pointerenter", handlePointerEnter)
+          .on("pointermove", moveTooltip)
+          .on("pointerleave", handlePointerLeave)
+          .on("focus", handleFocus)
+          .on("blur", handlePointerLeave)
+          .on("click", handleCountryClick)
+          .on("keydown", handleCountryKeydown);
+
+        const zoom = d3.zoom().scaleExtent([1, 8]).on("zoom", event => mapGroup.attr("transform", event.transform));
+        svg.call(zoom).on("dblclick.zoom", null).on("click.clear", event => {
+          if (event.target === svg.node()) clearSelection();
+        });
+        d3.select("#reset-zoom").on("click", () => svg.transition().duration(450).call(zoom.transform, d3.zoomIdentity));
+      }
+
+      function drawColorLegend(colorScale, minimum, maximum) {
+        const legendWidth = 360;
+        const left = 8;
+        const barWidth = 320;
+        const legend = d3.select("#choropleth-legend");
+        const svg = legend.append("svg").attr("viewBox", `0 0 ${legendWidth} 56`).attr("aria-hidden", "true");
+        const gradientId = "gdp-log-gradient";
+        const gradient = svg.append("defs").append("linearGradient").attr("id", gradientId).attr("x1", "0%").attr("x2", "100%");
+        const logMin = Math.log(minimum);
+        const logMax = Math.log(maximum);
+        gradient.selectAll("stop")
+          .data(d3.range(0, 1.001, .05))
+          .join("stop")
+          .attr("offset", d => `${d * 100}%`)
+          .attr("stop-color", d => colorScale(Math.exp(logMin + d * (logMax - logMin))));
+        svg.append("text").attr("class", "legend-title").attr("x", left).attr("y", 11).text("GDP (US$ billions, logarithmic color scale)");
+        svg.append("rect").attr("x", left).attr("y", 17).attr("width", barWidth).attr("height", 11).attr("fill", `url(#${gradientId})`);
+        const axisScale = d3.scaleLog().domain([minimum, maximum]).range([left, left + barWidth]);
+        svg.append("g")
+          .attr("transform", "translate(0,28)")
+          .call(d3.axisBottom(axisScale).tickValues([300, 1000, 3000, 10000, 30000]).tickFormat(d => d >= 1000 ? `${d / 1000}k` : d).tickSize(4))
+          .call(group => group.select(".domain").attr("stroke", "#98a2b3"))
+          .call(group => group.selectAll("text").attr("fill", "#667085").attr("font-size", 10));
+        legend.append("div").attr("class", "legend-key").html(`<span><i class="swatch swatch-missing"></i>No data in the supplied top-50 file</span>`);
+      }
+
+      function keepLargestPolygonComponent(topology, numericId) {
+        const geometry = topology.objects.countries.geometries.find(
+          candidate => normalizeNumericId(candidate.id) === numericId && candidate.properties.stat
+        );
+        if (!geometry || geometry.type !== "MultiPolygon" || geometry.arcs.length < 2) return;
+
+        const largestComponent = d3.greatest(geometry.arcs, polygonArcs => {
+          const polygon = topojson.feature(topology, { type: "Polygon", arcs: polygonArcs });
+          return d3.geoArea(polygon);
+        });
+        geometry.arcs = [largestComponent];
+      }
+
+      function drawCartogram(world, featureCollection, noDataFloor, colorScale) {
+        // cartogram-chart deforms projected TopoJSON arcs point by point. A normal
+        // world projection wraps at ±180°, which creates long horizontal segments
+        // inside Russia. This continuous Pacific-cut projection unwraps longitudes
+        // west of 160°W, keeping the Russian geometry on one side of the seam.
+        const projection = ([longitude, latitude]) => {
+          const unwrappedLongitude = longitude < -160 ? longitude + 360 : longitude;
+          const x = 18 + ((unwrappedLongitude + 160) / 360) * (WIDTH - 36);
+          const clampedLatitude = Math.max(-60, Math.min(85, latitude));
+          const y = 20 + ((85 - clampedLatitude) / 145) * (HEIGHT - 44);
+          return [x, y];
+        };
+        const container = document.querySelector("#cartogram");
+
+        // A tiny positive floor prevents undefined zero-area forces. It is never shown as GDP.
+        new Cartogram(container)
+          .width(WIDTH)
+          .height(HEIGHT)
+          .topoJson(world)
+          .topoObjectName("countries")
+          .projection(projection)
+          .iterations(20)
+          .value(feature => feature.properties.stat ? feature.properties.stat.gdp : noDataFloor)
+          .color(feature => feature.properties.stat ? colorScale(feature.properties.stat.gdp) : MISSING_COLOR)
+          .label(() => null)
+          .tooltipContent(() => null);
+
+        const observer = new MutationObserver(() => {
+          if (wireCartogramPaths()) observer.disconnect();
+        });
+        observer.observe(container, { childList: true, subtree: true });
+        requestAnimationFrame(() => requestAnimationFrame(wireCartogramPaths));
+      }
+
+      function wireCartogramPaths() {
+        const paths = d3.select("#cartogram").selectAll("path.feature");
+        if (paths.empty()) return false;
+        paths
+          .attr("tabindex", 0)
+          .attr("role", "button")
+          .attr("aria-label", countryAriaLabel)
+          .on("pointerenter.linked", handlePointerEnter)
+          .on("pointermove.linked", moveTooltip)
+          .on("pointerleave.linked", handlePointerLeave)
+          .on("focus.linked", handleFocus)
+          .on("blur.linked", handlePointerLeave)
+          .on("click.linked", handleCountryClick)
+          .on("keydown.linked", handleCountryKeydown);
+        const svg = d3.select("#cartogram svg");
+        svg.attr("viewBox", `0 0 ${WIDTH} ${HEIGHT}`).on("click.clear", event => {
+          if (event.target === svg.node()) clearSelection();
+        });
+        cartogramStatus.style.display = "none";
+        updateHighlights();
+        return true;
+      }
+
+      function handlePointerEnter(event, feature) {
+        hoveredIso3 = feature.properties.stat ? feature.properties.stat.iso3 : null;
+        updateHighlights();
+        showTooltip(event, feature);
+      }
+      function handlePointerLeave() { hoveredIso3 = null; updateHighlights(); hideTooltip(); }
+      function handleFocus(event, feature) { hoveredIso3 = feature.properties.stat ? feature.properties.stat.iso3 : null; updateHighlights(); showTooltip(event, feature); }
+      function handleCountryClick(event, feature) {
+        event.stopPropagation();
+        const iso3 = feature.properties.stat ? feature.properties.stat.iso3 : null;
+        if (!iso3) { clearSelection(); return; }
+        lockedIso3 = lockedIso3 === iso3 ? null : iso3;
+        hoveredIso3 = null;
+        updateHighlights();
+      }
+      function handleCountryKeydown(event, feature) {
+        if (event.key === "Enter" || event.key === " ") { event.preventDefault(); handleCountryClick(event, feature); }
+        else if (event.key === "Escape") { event.preventDefault(); clearSelection(); event.currentTarget.blur(); }
+      }
+
+      function updateHighlights() {
+        const activeIso3 = hoveredIso3 || lockedIso3;
+        if (choroplethPaths) choroplethPaths.classed("is-active", feature => Boolean(activeIso3 && feature.properties.iso3 === activeIso3));
+        d3.select("#cartogram").selectAll("path.feature").classed("is-active", feature => Boolean(activeIso3 && feature.properties.iso3 === activeIso3));
+      }
+      function clearSelection() { lockedIso3 = null; hoveredIso3 = null; updateHighlights(); hideTooltip(); }
+
+      function showTooltip(event, feature) {
+        const stat = feature.properties.stat;
+        const name = stat ? stat.country : (feature.properties.name || "Unknown country");
+        tooltip.replaceChildren();
+        const title = document.createElement("strong");
+        title.textContent = name;
+        tooltip.append(title, document.createElement("br"));
+        if (stat) {
+          const code = document.createElement("span");
+          code.className = "muted";
+          code.textContent = `${stat.iso3} · Rank ${stat.rank}`;
+          tooltip.append(code, document.createElement("br"));
+          tooltip.append(document.createTextNode(`GDP: $${d3.format(",.1f")(stat.gdp)} billion`));
+        } else {
+          const missing = document.createElement("span");
+          missing.className = "muted";
+          missing.textContent = "No data in the supplied top-50 file";
+          tooltip.append(missing);
+        }
+        tooltip.setAttribute("aria-hidden", "false");
+        tooltip.style.opacity = "1";
+        moveTooltip(event);
+      }
+
+      function moveTooltip(event) {
+        let x;
+        let y;
+        if (Number.isFinite(event.clientX) && Number.isFinite(event.clientY)) {
+          x = event.clientX + 13;
+          y = event.clientY + 13;
+        } else {
+          const bounds = event.currentTarget.getBoundingClientRect();
+          x = bounds.left + Math.min(bounds.width, 20);
+          y = bounds.top + Math.min(bounds.height, 20);
+        }
+        const bounds = tooltip.getBoundingClientRect();
+        x = Math.min(x, window.innerWidth - bounds.width - 12);
+        y = Math.min(y, window.innerHeight - bounds.height - 12);
+        tooltip.style.left = `${Math.max(12, x)}px`;
+        tooltip.style.top = `${Math.max(12, y)}px`;
+      }
+
+      function hideTooltip() { tooltip.setAttribute("aria-hidden", "true"); tooltip.style.opacity = "0"; }
+      function countryAriaLabel(feature) {
+        const stat = feature.properties.stat;
+        const name = stat ? stat.country : (feature.properties.name || "Unknown country");
+        return stat ? `${name}, rank ${stat.rank}, GDP ${d3.format(",.1f")(stat.gdp)} billion U.S. dollars` : `${name}, no data in the supplied top-50 file`;
+      }
+      function normalizeNumericId(id) { return String(id).padStart(3, "0"); }
+      function showFatalError(message) {
+        pageStatus.className = "error-box";
+        pageStatus.textContent = message;
+        choroplethStatus.textContent = "Map unavailable";
+        cartogramStatus.textContent = "Cartogram unavailable";
+      }
+    })();
+  </script>
+</body>
+</html>

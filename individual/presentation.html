@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="One-slide presentation of the OECD Better Life Index visualization redesign.">
+  <link rel="icon" href="data:,">
+  <title>OECD Better Life Index Redesign | One-slide presentation</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #152238;
+      background: #dfe5ea;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; min-height: 100%; margin: 0; }
+    body { display: grid; min-height: 100vh; place-items: center; overflow: hidden; }
+
+    .stage { position: relative; width: 1600px; height: 900px; }
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1600px;
+      height: 900px;
+      overflow: hidden;
+      padding: 52px 64px 38px;
+      background:
+        radial-gradient(circle at 93% 7%, rgb(28 129 119 / 12%) 0 12%, transparent 12.5%),
+        #f8fafb;
+      box-shadow: 0 24px 70px rgb(17 37 57 / 20%);
+      transform-origin: top left;
+    }
+
+    header { height: 145px; border-bottom: 2px solid #d7e0e7; }
+    .eyebrow { margin: 0 0 9px; color: #0d7a70; font-size: 18px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: 55px; line-height: 1.03; letter-spacing: -0.045em; }
+    .subtitle { margin: 10px 0 0; color: #526278; font-size: 25px; line-height: 1.35; }
+
+    .comparison { display: grid; grid-template-columns: 510px minmax(0, 1fr); gap: 54px; height: 638px; padding-top: 28px; }
+    .column-label { margin: 0 0 10px; color: #0d7a70; font-size: 18px; font-weight: 850; letter-spacing: 0.1em; text-transform: uppercase; }
+    figure { margin: 0; }
+    .original-image, .redesign-image {
+      display: block;
+      width: 100%;
+      border: 1px solid #cfd9e2;
+      background: #ffffff;
+      box-shadow: 0 9px 24px rgb(21 43 67 / 9%);
+    }
+    .original-image { height: 262px; object-fit: cover; object-position: center 20%; }
+    .redesign-image { height: 450px; object-fit: cover; object-position: center top; }
+
+    .problem-heading { margin: 25px 0 10px; color: #23364e; font-size: 25px; }
+    ul { margin: 0; padding-left: 25px; color: #425269; font-size: 22px; line-height: 1.42; }
+    li + li { margin-top: 8px; }
+    li::marker { color: #0d7a70; }
+
+    .takeaway {
+      margin: 14px 0 0;
+      padding-left: 18px;
+      color: #2f4057;
+      border-left: 6px solid #0d7a70;
+      font-size: 22px;
+      line-height: 1.35;
+    }
+    .takeaway strong { color: #075f57; }
+
+    footer {
+      display: flex;
+      height: 27px;
+      justify-content: space-between;
+      align-items: end;
+      color: #6b7788;
+      font-size: 16px;
+    }
+
+    @media print {
+      @page { size: 16in 9in; margin: 0; }
+      :root { background: #ffffff; }
+      body { display: block; width: 16in; min-height: 9in; overflow: hidden; }
+      .stage { width: 1600px !important; height: 900px !important; }
+      .slide { box-shadow: none; transform: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage" aria-label="One-slide presentation canvas">
+    <section class="slide" role="document" aria-labelledby="slide-title">
+      <header>
+        <p class="eyebrow">OECD Better Life Index</p>
+        <h1 id="slide-title">Redesigning multidimensional country comparison</h1>
+        <p class="subtitle">An aligned heatmap makes ranking and comparison easier across 38 countries and 11 dimensions</p>
+      </header>
+
+      <div class="comparison">
+        <section aria-labelledby="original-label">
+          <p id="original-label" class="column-label">Original flower chart</p>
+          <figure>
+            <img class="original-image" src="image.png" alt="Original OECD Better Life Index with sliders and flower glyphs.">
+          </figure>
+          <h2 class="problem-heading">Why comparison is difficult</h2>
+          <ul>
+            <li>Radial petals lack a shared baseline</li>
+            <li>Petal size mixes performance with preference</li>
+            <li>Finding the highest value requires scanning every glyph</li>
+          </ul>
+        </section>
+
+        <section aria-labelledby="redesign-label">
+          <p id="redesign-label" class="column-label">Redesign: sortable heatmap</p>
+          <figure>
+            <img class="redesign-image" src="redesign.png" alt="Excerpt of the redesigned sortable heatmap with Finland selected.">
+          </figure>
+          <p class="takeaway"><strong>Performance remains visible in the cells.</strong> Priority sliders affect only the weighted overall score, while the detail plot uses one common 0–10 scale.</p>
+        </section>
+      </div>
+
+      <footer>
+        <span>STATS 401 · Jietong Zhou</span>
+        <span>Source: OECD Better Life Index, 2026 snapshot</span>
+      </footer>
+    </section>
+  </div>
+
+  <script>
+    const stage = document.querySelector(".stage");
+    const slide = document.querySelector(".slide");
+
+    function fitSlide() {
+      const padding = 24;
+      const scale = Math.min((window.innerWidth - padding * 2) / 1600, (window.innerHeight - padding * 2) / 900);
+      const safeScale = Math.max(0.1, scale);
+      stage.style.width = `${1600 * safeScale}px`;
+      stage.style.height = `${900 * safeScale}px`;
+      slide.style.transform = `scale(${safeScale})`;
+    }
+
+    fitSlide();
+    window.addEventListener("resize", fitSlide);
+  </script>
+</body>
+</html>
