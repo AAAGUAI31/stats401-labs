@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 10 · Task 1–13 分步演示</title>
+
+    <!-- 本页使用 D3 更新同一张图；语音、手势、视线只是不同的输入方式。 -->
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+
+    <style>
+        :root {
+            --ink: #183153;
+            --muted: #5f6f82;
+            --paper: #f5f7fb;
+            --card: #ffffff;
+            --line: #dbe4ef;
+            --blue: #2563eb;
+            --blue-soft: #eaf1ff;
+            --teal: #0f766e;
+            --amber: #d97706;
+            --red: #b91c1c;
+            --shadow: 0 14px 34px rgba(24, 49, 83, 0.10);
+        }
+
+        * { box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            margin: 0;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 10% 0%, #dbeafe 0, transparent 30rem),
+                var(--paper);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+                "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            line-height: 1.6;
+        }
+
+        button, input, select { font: inherit; }
+
+        button {
+            border: 0;
+            border-radius: 0.7rem;
+            padding: 0.65rem 1rem;
+            color: white;
+            background: var(--blue);
+            cursor: pointer;
+            transition: transform 120ms ease, opacity 120ms ease;
+        }
+
+        button:hover { transform: translateY(-1px); }
+        button:disabled { cursor: not-allowed; opacity: 0.45; transform: none; }
+        button.secondary { color: var(--ink); background: #e8eef6; }
+        button.danger { background: var(--red); }
+
+        input, select {
+            min-width: 0;
+            border: 1px solid #bdcadd;
+            border-radius: 0.7rem;
+            padding: 0.62rem 0.8rem;
+            color: var(--ink);
+            background: white;
+        }
+
+        code {
+            padding: 0.12rem 0.35rem;
+            border-radius: 0.35rem;
+            color: #1746a2;
+            background: var(--blue-soft);
+        }
+
+        .hero {
+            padding: 4.5rem max(1.2rem, calc((100vw - 1180px) / 2)) 3.5rem;
+            color: white;
+            background: linear-gradient(125deg, #11284a 0%, #164e63 62%, #0f766e 100%);
+        }
+
+        .eyebrow {
+            margin: 0 0 0.5rem;
+            color: #99f6e4;
+            font-size: 0.83rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        h1 { max-width: 850px; margin: 0; font-size: clamp(2rem, 5vw, 4rem); line-height: 1.08; }
+        .hero p { max-width: 780px; margin: 1.2rem 0 0; color: #dbeafe; font-size: 1.05rem; }
+
+        .hero-tags, .button-row, .legend, .pipeline {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem;
+            align-items: center;
+        }
+
+        .hero-tags { margin-top: 1.5rem; }
+        .pill {
+            padding: 0.35rem 0.7rem;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 999px;
+            color: white;
+            background: rgba(255,255,255,0.08);
+        }
+
+        .page-nav {
+            position: sticky;
+            z-index: 20;
+            top: 0;
+            display: flex;
+            gap: 0.6rem;
+            overflow-x: auto;
+            padding: 0.8rem max(1rem, calc((100vw - 1180px) / 2));
+            border-bottom: 1px solid var(--line);
+            background: rgba(255,255,255,0.94);
+            backdrop-filter: blur(12px);
+        }
+
+        .page-nav a {
+            flex: 0 0 auto;
+            padding: 0.45rem 0.75rem;
+            border-radius: 999px;
+            color: var(--ink);
+            text-decoration: none;
+            background: #eef3f8;
+        }
+
+        main { width: min(1180px, calc(100% - 2rem)); margin: 2rem auto 5rem; }
+
+        section {
+            margin-top: 1.5rem;
+            padding: clamp(1.1rem, 3vw, 2rem);
+            border: 1px solid var(--line);
+            border-radius: 1.2rem;
+            background: var(--card);
+            box-shadow: var(--shadow);
+        }
+
+        section > h2 { margin: 0; font-size: clamp(1.4rem, 3vw, 2rem); }
+        section > .lead { margin: 0.45rem 0 1.4rem; color: var(--muted); }
+
+        .notice {
+            margin: 1rem 0;
+            padding: 0.9rem 1rem;
+            border-left: 4px solid var(--amber);
+            border-radius: 0.4rem;
+            color: #713f12;
+            background: #fffbeb;
+        }
+
+        .visualization-grid, .sensor-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.65fr);
+            gap: 1rem;
+            align-items: start;
+        }
+
+        .chart-wrap, .camera-stage {
+            position: relative;
+            overflow: hidden;
+            min-height: 420px;
+            border: 1px solid var(--line);
+            border-radius: 1rem;
+            background: #f8fbff;
+        }
+
+        #chart { display: block; width: 100%; height: auto; min-height: 420px; }
+        .bar { cursor: pointer; transition: opacity 150ms ease; }
+        .bar:hover { opacity: 0.78; }
+        .bar.gaze-target { stroke: #f59e0b; stroke-width: 5; }
+        .axis text { fill: var(--muted); font-size: 12px; }
+        .axis path, .axis line { stroke: #cbd5e1; }
+
+        .panel {
+            padding: 1rem;
+            border: 1px solid var(--line);
+            border-radius: 1rem;
+            background: #fbfdff;
+        }
+
+        .panel h3 { margin: 0 0 0.75rem; }
+        .panel + .panel { margin-top: 1rem; }
+
+        .status-grid { display: grid; gap: 0.65rem; }
+        .status-line {
+            display: grid;
+            grid-template-columns: 7.5rem 1fr;
+            gap: 0.6rem;
+            padding: 0.65rem 0.75rem;
+            border-radius: 0.7rem;
+            color: var(--ink);
+            background: #eef4fa;
+        }
+        .status-line strong { color: var(--muted); }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.85rem;
+            margin-top: 1.2rem;
+        }
+
+        .task-card {
+            padding: 1rem;
+            border: 1px solid var(--line);
+            border-radius: 0.9rem;
+            background: #fcfdff;
+        }
+
+        .task-card h3 { margin: 0 0 0.35rem; font-size: 1rem; }
+        .task-card p { margin: 0; color: var(--muted); }
+        .task-number { color: var(--blue); font-weight: 900; }
+
+        .pipeline { margin: 1rem 0; color: var(--teal); font-weight: 750; }
+        .pipeline .arrow { color: #94a3b8; }
+
+        .command-form { display: grid; grid-template-columns: 1fr auto; gap: 0.6rem; margin-top: 0.8rem; }
+        .command-list { margin: 0.8rem 0 0; padding-left: 1.2rem; color: var(--muted); }
+
+        .camera-stage { min-height: 390px; background: #07111f; }
+        #camera, #camera-overlay {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+        #camera-overlay { pointer-events: none; }
+        .camera-placeholder {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            padding: 2rem;
+            color: #dbeafe;
+            text-align: center;
+        }
+
+        .gesture-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.55rem; }
+
+        #gaze-cursor {
+            position: fixed;
+            z-index: 9999;
+            display: none;
+            width: 24px;
+            height: 24px;
+            border: 3px solid white;
+            border-radius: 50%;
+            background: rgba(245, 158, 11, 0.78);
+            box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.35);
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+        }
+
+        .progress-track {
+            overflow: hidden;
+            height: 0.7rem;
+            margin-top: 0.8rem;
+            border-radius: 999px;
+            background: #e2e8f0;
+        }
+        #dwell-progress { width: 0; height: 100%; background: var(--amber); transition: width 80ms linear; }
+
+        details {
+            margin-top: 1rem;
+            padding: 0.9rem 1rem;
+            border: 1px dashed #aabbd0;
+            border-radius: 0.8rem;
+            background: #f8fafc;
+        }
+        summary { cursor: pointer; font-weight: 750; }
+        pre { overflow-x: auto; padding: 1rem; border-radius: 0.75rem; color: #dbeafe; background: #0f172a; }
+        pre code { padding: 0; color: inherit; background: transparent; }
+
+        .checkline { display: flex; gap: 0.6rem; align-items: center; margin-top: 0.8rem; }
+        .checkline input { width: 1rem; height: 1rem; }
+
+        footer { padding: 1rem 1rem 4rem; color: var(--muted); text-align: center; }
+        footer a { color: var(--blue); }
+
+        @media (max-width: 820px) {
+            .visualization-grid, .sensor-grid, .steps { grid-template-columns: 1fr; }
+            .chart-wrap { min-height: 340px; }
+            #chart { min-height: 340px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="hero">
+        <p class="eyebrow">STATS 401 · Lab 10 learning demo</p>
+        <h1>Task 1–13：新型交互分步演示</h1>
+        <p>
+            这是教学演示，不是 assignment 答案。语音、手势与视线会控制同一张示例柱状图，
+            方便逐步观察输入识别、命令映射、D3 更新、反馈与回退控制。
+        </p>
+        <div class="hero-tags" aria-label="演示内容">
+            <span class="pill">Task 1–5 · Voice</span>
+            <span class="pill">Task 6–10 · Gesture</span>
+            <span class="pill">Task 11–13 · Gaze</span>
+            <span class="pill">Mouse / Button fallback</span>
+        </div>
+    </header>
+
+    <nav class="page-nav" aria-label="页面导航">
+        <a href="#shared-viz">共用可视化</a>
+        <a href="#voice">Task 1–5</a>
+        <a href="#gesture">Task 6–10</a>
+        <a href="#gaze">Task 11–13</a>
+        <a href="#run-notes">运行说明</a>
+    </nav>
+
+    <main>
+        <section id="shared-viz">
+            <h2>先看核心：输入方法与可视化功能分离</h2>
+            <p class="lead">
+                下面的按钮、语音、手势和视线最终只调用
+                <code>filterRegion()</code>、<code>moveTimeStep()</code>、
+                <code>highlightCountry()</code> 和 <code>resetVisualization()</code>。
+            </p>
+
+            <div class="pipeline" aria-label="交互流程">
+                <span>用户输入</span><span class="arrow">→</span>
+                <span>识别</span><span class="arrow">→</span>
+                <span>命令映射</span><span class="arrow">→</span>
+                <span>D3 更新</span><span class="arrow">→</span>
+                <span>可见反馈</span>
+            </div>
+
+            <div class="visualization-grid">
+                <div id="chart-wrap" class="chart-wrap">
+                    <svg id="chart" viewBox="0 0 760 420" role="img" aria-label="示例国家数值柱状图"></svg>
+                </div>
+
+                <aside>
+                    <div class="panel">
+                        <h3>传统回退控制</h3>
+                        <div class="button-row">
+                            <select id="region-select" aria-label="选择地区">
+                                <option value="All">全部地区</option>
+                                <option value="Asia">Asia</option>
+                                <option value="Europe">Europe</option>
+                                <option value="Americas">Americas</option>
+                            </select>
+                            <button id="previous-button" class="secondary">← 上一年</button>
+                            <button id="next-button" class="secondary">下一年 →</button>
+                            <button id="reset-button">重置</button>
+                        </div>
+                        <p>也可直接点击柱子进行选择。</p>
+                    </div>
+
+                    <div class="panel status-grid" aria-live="polite">
+                        <h3>可视化状态</h3>
+                        <div class="status-line"><strong>年份</strong><span id="year-status">—</span></div>
+                        <div class="status-line"><strong>地区</strong><span id="region-status">—</span></div>
+                        <div class="status-line"><strong>选择</strong><span id="selection-status">尚未选择</span></div>
+                        <div class="status-line"><strong>最近动作</strong><span id="viz-action">页面已加载</span></div>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <section id="voice">
+            <h2>Part I · Voice Interaction</h2>
+            <p class="lead">Task 1–5：检查 API、由用户启动、读取文字、映射命令、提供反馈。</p>
+
+            <div class="sensor-grid">
+                <div class="panel">
+                    <h3>真实语音 + 文本模拟</h3>
+                    <div class="button-row">
+                        <button id="voice-button">开始语音控制</button>
+                        <button id="voice-stop-button" class="secondary">停止聆听</button>
+                    </div>
+
+                    <form id="voice-form" class="command-form">
+                        <input id="voice-input" value="show asia" aria-label="模拟语音命令">
+                        <button type="submit">模拟识别</button>
+                    </form>
+
+                    <ul class="command-list">
+                        <li><code>show asia</code> / <code>show europe</code> / <code>show americas</code></li>
+                        <li><code>highlight japan</code> / <code>highlight france</code></li>
+                        <li><code>next</code> / <code>previous</code> / <code>reset</code></li>
+                        <li><code>select</code>：确认当前视线目标或已高亮项目</li>
+                    </ul>
+                </div>
+
+                <div class="panel status-grid" aria-live="polite">
+                    <h3>Task 5 · 语音反馈</h3>
+                    <div class="status-line"><strong>API</strong><span id="voice-support">检查中…</span></div>
+                    <div class="status-line"><strong>状态</strong><span id="voice-status">尚未启动</span></div>
+                    <div class="status-line"><strong>听到</strong><span id="voice-heard">—</span></div>
+                    <div class="status-line"><strong>动作</strong><span id="voice-action">—</span></div>
+                </div>
+            </div>
+
+            <div class="steps">
+                <article class="task-card">
+                    <h3><span class="task-number">Task 1</span> · 检查 SpeechRecognition</h3>
+                    <p>先检查标准属性与 Chrome 的前缀属性；不支持时保留文本和按钮回退。</p>
+                </article>
+                <article class="task-card">
+                    <h3><span class="task-number">Task 2</span> · 用户点击后启动</h3>
+                    <p>只有点击“开始语音控制”后才调用 <code>recognition.start()</code> 请求麦克风。</p>
+                </article>
+                <article class="task-card">
+                    <h3><span class="task-number">Task 3</span> · 读取 transcript</h3>
+                    <p>在 <code>onresult</code> 中取第一条结果，并统一转小写、去除首尾空格。</p>
+                </article>
+                <article class="task-card">
+                    <h3><span class="task-number">Task 4</span> · 映射到图表动作</h3>
+                    <p><code>handleVoiceCommand()</code> 不直接画图，只调用共享的可视化函数。</p>
+                </article>
+                <article class="task-card">
+                    <h3><span class="task-number">Task 5</span> · 显示识别反馈</h3>
+                    <p>界面始终显示状态、听到的内容和执行的动作；未知命令会显示可用示例。</p>
+                </article>
+            </div>
+
+            <details>
+                <summary>查看 Task 1–4 的最小核心代码</summary>
+                <pre><code>const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+// Task 2：必须由用户点击后启动，不能自动打开麦克风。
+voiceButton.addEventListener("click", () =&gt; recognition.start());
+
+// Task 3：把声音识别成规范化文本。
+recognition.onresult = (event) =&gt; {
+    const command = event.results[0][0].transcript.toLowerCase().trim();
+    handleVoiceCommand(command);
+};
+
+// Task 4：输入层只负责调用可视化层的函数。
+function handleVoiceCommand(command) {
+    if (command.includes("reset")) resetVisualization();
+    else if (command.includes("show asia")) filterRegion("Asia");
+}</code></pre>
+            </details>
+        </section>
+
+        <section id="gesture">
+            <h2>Part II · Camera-Based Hand Gesture</h2>
+            <p class="lead">Task 6–10：显式打开相机、识别手部、设计小词汇、映射动作并加入冷却。</p>
+
+            <div class="notice">
+                摄像头不会自动启动。点击“启动手势摄像头”后，页面才会请求权限并下载 MediaPipe 模型。
+                如果设备或网络不支持，可用右侧模拟按钮验证完整命令流程。
+            </div>
+
+            <div class="sensor-grid">
+                <div>
+                    <div class="camera-stage">
+                        <video id="camera" autoplay playsinline muted></video>
+                        <canvas id="camera-overlay" width="640" height="480"></canvas>
+                        <div id="camera-placeholder" class="camera-placeholder">
+                            相机尚未启动<br>视频只在当前浏览器页面中用于识别
+                        </div>
+                    </div>
+                    <div class="button-row" style="margin-top: 0.8rem">
+                        <button id="camera-start-button">启动手势摄像头</button>
+                        <button id="camera-stop-button" class="danger">停止摄像头</button>
+                    </div>
+                </div>
+
+                <aside>
+                    <div class="panel status-grid" aria-live="polite">
+                        <h3>手势反馈</h3>
+                        <div class="status-line"><strong>相机</strong><span id="camera-status">未启动</span></div>
+                        <div class="status-line"><strong>模型</strong><span id="model-status">尚未加载</span></div>
+                        <div class="status-line"><strong>检测</strong><span id="gesture-detected">—</span></div>
+                        <div class="status-line"><strong>动作</strong><span id="gesture-action">—</span></div>
+                        <div class="status-line"><strong>冷却</strong><span id="cooldown-status">就绪</span></div>
+                    </div>
+
+                    <div class="panel">
+                        <h3>Task 8 · 小型手势词汇</h3>
+                        <div class="gesture-buttons">
+                            <button data-gesture="Open_Palm" class="secondary">Open Palm · 重置</button>
+                            <button data-gesture="Swipe_Left" class="secondary">Swipe Left · 上一年</button>
+                            <button data-gesture="Swipe_Right" class="secondary">Swipe Right · 下一年</button>
+                            <button data-gesture="Pointing_Up" class="secondary">Pointing Up · 详情</button>
+                            <button data-gesture="Thumb_Up" class="secondary">Thumb Up · 确认</button>
+                        </div>
+                        <p>以上按钮模拟模型输出的标签，也会经过同一个 1000 ms 冷却函数。</p>
+                    </div>
+                </aside>
+            </div>
+
+            <div class="steps">
+                <article class="task-card">
+                    <h3><span class="task-number">Task 6</span> · getUserMedia()</h3>
+                    <p>点击后请求 <code>video: true</code>；停止时逐条关闭 stream 的 tracks。</p>
+                </article>
+                <article class="task-card">
+                    <h3><span class="task-number">Task 7</span> · MediaPipe 识别</h3>
+                    <p>逐帧执行 Gesture Recognizer，并在 canvas 上画出 21 个手部关键点。</p>
+                </article>
+                <article class="task-card">
+                    <h3><span class="task-number">Task 8</span> · 小而可靠的词汇</h3>
+                    <p>内置静态手势配合腕部横向位移形成 Swipe；避免设计过多相似动作。</p>
+                </article>
+                <article class="task-card">
+                    <h3><span class="task-number">Task 9</span> · handleGesture()</h3>
+                    <p>手势标签与图表函数集中映射，便于替换模型而不重写可视化。</p>
+                </article>
+                <article class="task-card">
+                    <h3><span class="task-number">Task 10</span> · Cooldown</h3>
+                    <p>同一姿势会连续出现在许多帧里；冷却时间阻止一次动作被重复执行。</p>
+                </article>
+            </div>
+
+            <details>
+                <summary>查看 Task 9–10 的最小核心代码</summary>
+                <pre><code>let lastGestureTime = 0;
+const GESTURE_COOLDOWN = 1000;
+
+function triggerGesture(gesture) {
+    const now = Date.now();
+
+    // Task 10：一秒内只允许一次可视化命令。
+    if (now - lastGestureTime &lt; GESTURE_COOLDOWN) return;
+
+    lastGestureTime = now;
+    handleGesture(gesture);
+}
+
+function handleGesture(gesture) {
+    if (gesture === "Open_Palm") resetVisualization();
+    else if (gesture === "Swipe_Right") moveTimeStep(1);
+    else if (gesture === "Swipe_Left") moveTimeStep(-1);
+}</code></pre>
+            </details>
+        </section>
+
+        <section id="gaze">
+            <h2>Part III · Webcam-Based Eye Gaze</h2>
+            <p class="lead">Task 11–13：显示估计点，并用 800 ms dwell 或语音确认避免 Midas Touch。</p>
+
+            <div class="sensor-grid">
+                <div class="panel">
+                    <h3>真实摄像头视线估计 + 鼠标模拟</h3>
+                    <div class="button-row">
+                        <button id="gaze-start-button">启动视线估计</button>
+                        <button id="gaze-stop-button" class="danger">停止视线估计</button>
+                    </div>
+                    <label class="checkline">
+                        <input id="mouse-gaze-toggle" type="checkbox">
+                        <span>用鼠标位置模拟视线（在图表上移动并停留 800 ms）</span>
+                    </label>
+                    <p>
+                        真实模式需要先校准：启动后依次注视并点击页面上不同位置。
+                        WebGazer-compatible 引擎会从点击和鼠标移动学习视线映射。
+                    </p>
+                    <div class="progress-track" aria-label="停留进度">
+                        <div id="dwell-progress"></div>
+                    </div>
+                </div>
+
+                <div class="panel status-grid" aria-live="polite">
+                    <h3>视线反馈</h3>
+                    <div class="status-line"><strong>状态</strong><span id="gaze-status">未启动</span></div>
+                    <div class="status-line"><strong>坐标</strong><span id="gaze-position">—</span></div>
+                    <div class="status-line"><strong>目标</strong><span id="gaze-target">—</span></div>
+                    <div class="status-line"><strong>动作</strong><span id="gaze-action">—</span></div>
+                </div>
+            </div>
+
+            <div class="steps">
+                <article class="task-card">
+                    <h3><span class="task-number">Task 11</span> · 理解近似交互</h3>
+                    <p>普通摄像头的视线估计有噪声，适合粗略定位，不适合像素级精确选择。</p>
+                </article>
+                <article class="task-card">
+                    <h3><span class="task-number">Task 12</span> · 显示 gaze point</h3>
+                    <p><code>updateGazeCursor(x, y)</code> 把估计坐标画成橙色圆点，让误差可见。</p>
+                </article>
+                <article class="task-card">
+                    <h3><span class="task-number">Task 13</span> · 避免 Midas Touch</h3>
+                    <p>只有对同一柱停留 800 ms 才高亮；也可先看目标，再说“select”确认。</p>
+                </article>
+            </div>
+
+            <details>
+                <summary>查看 Task 12–13 的最小核心代码</summary>
+                <pre><code>function gazeListener(data) {
+    if (!data) return;
+    updateGazeCursor(data.x, data.y); // Task 12：立即给位置反馈
+    updateDwellTarget(data.x, data.y);
+}
+
+// Task 13：目标保持不变满 800 ms 才触发高亮。
+if (sameTarget &amp;&amp; performance.now() - dwellStartedAt &gt;= 800) {
+    highlightCountry(country);
+}</code></pre>
+            </details>
+        </section>
+
+        <section id="run-notes">
+            <h2>运行说明与隐私边界</h2>
+            <ol>
+                <li>在仓库根目录运行 <code>python -m http.server 8000</code>。</li>
+                <li>浏览器打开 <code>http://localhost:8000/lab10/task1-13-demo.html</code>。</li>
+                <li>语音建议使用 Chrome 或 Edge；摄像头功能需要 localhost 或 HTTPS。</li>
+                <li>D3、MediaPipe 模型和 WebGazer-compatible 引擎由 CDN 加载，因此首次运行需要联网。</li>
+                <li>页面只在点击对应启动按钮后请求麦克风/摄像头；停止按钮会关闭媒体流。</li>
+            </ol>
+        </section>
+    </main>
+
+    <div id="gaze-cursor" aria-hidden="true"></div>
+
+    <footer>
+        教学依赖：
+        <a href="https://ai.google.dev/edge/mediapipe/solutions/vision/gesture_recognizer/web_js" target="_blank" rel="noreferrer">MediaPipe Gesture Recognizer</a>
+        ·
+        <a href="https://webgazer.cs.brown.edu/" target="_blank" rel="noreferrer">WebGazer.js</a>
+        ·
+        <a href="https://www.npmjs.com/package/@webgazer-ts/core" target="_blank" rel="noreferrer">WebGazer TS compatibility engine</a>
+    </footer>
+
+    <script type="module">
+        import {
+            GestureRecognizer,
+            FilesetResolver
+        } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3";
+
+        // =====================================================================
+        // 共用可视化层：所有输入方式都只调用这里的函数。
+        // =====================================================================
+
+        const years = [2022, 2023, 2024];
+        const dataset = [
+            { country: "China", region: "Asia", values: [72, 78, 84] },
+            { country: "Japan", region: "Asia", values: [61, 65, 69] },
+            { country: "India", region: "Asia", values: [48, 57, 67] },
+            { country: "Germany", region: "Europe", values: [66, 63, 70] },
+            { country: "France", region: "Europe", values: [54, 59, 64] },
+            { country: "UK", region: "Europe", values: [57, 60, 68] },
+            { country: "USA", region: "Americas", values: [77, 82, 88] },
+            { country: "Brazil", region: "Americas", values: [43, 51, 58] }
+        ];
+
+        const state = {
+            yearIndex: 0,
+            region: "All",
+            selectedCountry: null,
+            gazeTarget: null
+        };
+
+        const regionColor = d3.scaleOrdinal()
+            .domain(["Asia", "Europe", "Americas"])
+            .range(["#2563eb", "#0f766e", "#d97706"]);
+
+        const svg = d3.select("#chart");
+        const width = 760;
+        const height = 420;
+        const margin = { top: 62, right: 24, bottom: 74, left: 58 };
+        const innerWidth = width - margin.left - margin.right;
+        const innerHeight = height - margin.top - margin.bottom;
+
+        const plot = svg.append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        const xAxisGroup = plot.append("g")
+            .attr("class", "axis")
+            .attr("transform", `translate(0,${innerHeight})`);
+
+        const yAxisGroup = plot.append("g").attr("class", "axis");
+        const barLayer = plot.append("g");
+
+        svg.append("text")
+            .attr("id", "chart-title")
+            .attr("x", margin.left)
+            .attr("y", 32)
+            .attr("font-size", 20)
+            .attr("font-weight", 800);
+
+        svg.append("text")
+            .attr("x", margin.left)
+            .attr("y", 52)
+            .attr("fill", "#64748b")
+            .attr("font-size", 12)
+            .text("演示数据：用于观察交互，不代表真实统计量");
+
+        svg.append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("x", -(margin.top + innerHeight / 2))
+            .attr("y", 18)
+            .attr("text-anchor", "middle")
+            .attr("fill", "#64748b")
+            .text("Value");
+
+        function getVisibleData() {
+            return dataset
+                .filter(d => state.region === "All" || d.region === state.region)
+                .map(d => ({ ...d, value: d.values[state.yearIndex] }));
+        }
+
+        function renderChart() {
+            const visible = getVisibleData();
+            const x = d3.scaleBand()
+                .domain(visible.map(d => d.country))
+                .range([0, innerWidth])
+                .padding(0.22);
+            const y = d3.scaleLinear().domain([0, 100]).nice().range([innerHeight, 0]);
+
+            xAxisGroup
+                .transition().duration(350)
+                .call(d3.axisBottom(x).tickSizeOuter(0));
+
+            yAxisGroup
+                .transition().duration(350)
+                .call(d3.axisLeft(y).ticks(5));
+
+            const bars = barLayer.selectAll("rect.bar")
+                .data(visible, d => d.country);
+
+            bars.exit()
+                .transition().duration(250)
+                .attr("y", innerHeight)
+                .attr("height", 0)
+                .remove();
+
+            bars.enter()
+                .append("rect")
+                .attr("class", "bar")
+                .attr("data-country", d => d.country)
+                .attr("x", d => x(d.country))
+                .attr("width", x.bandwidth())
+                .attr("y", innerHeight)
+                .attr("height", 0)
+                .attr("rx", 7)
+                .on("click", (_, d) => highlightCountry(d.country, "鼠标点击"))
+                .merge(bars)
+                .classed("gaze-target", d => d.country === state.gazeTarget)
+                .transition().duration(450)
+                .attr("x", d => x(d.country))
+                .attr("width", x.bandwidth())
+                .attr("y", d => y(d.value))
+                .attr("height", d => innerHeight - y(d.value))
+                .attr("fill", d => d.country === state.selectedCountry ? "#be123c" : regionColor(d.region));
+
+            const labels = barLayer.selectAll("text.value-label")
+                .data(visible, d => d.country);
+
+            labels.exit().remove();
+
+            labels.enter()
+                .append("text")
+                .attr("class", "value-label")
+                .attr("text-anchor", "middle")
+                .attr("font-size", 12)
+                .attr("font-weight", 800)
+                .merge(labels)
+                .transition().duration(450)
+                .attr("x", d => x(d.country) + x.bandwidth() / 2)
+                .attr("y", d => y(d.value) - 8)
+                .text(d => d.value);
+
+            d3.select("#chart-title").text(`${years[state.yearIndex]} · ${state.region}`);
+            d3.select("#year-status").text(years[state.yearIndex]);
+            d3.select("#region-status").text(state.region);
+            d3.select("#selection-status").text(state.selectedCountry || "尚未选择");
+            d3.select("#region-select").property("value", state.region);
+        }
+
+        function setVisualizationAction(message) {
+            d3.select("#viz-action").text(message);
+        }
+
+        function filterRegion(region, source = "控制命令") {
+            const allowed = ["All", "Asia", "Europe", "Americas"];
+            if (!allowed.includes(region)) return false;
+
+            state.region = region;
+            const selected = dataset.find(d => d.country === state.selectedCountry);
+            if (selected && region !== "All" && selected.region !== region) {
+                state.selectedCountry = null;
+            }
+            setVisualizationAction(`${source}：显示 ${region}`);
+            renderChart();
+            return true;
+        }
+
+        function moveTimeStep(direction, source = "控制命令") {
+            const nextIndex = Math.max(0, Math.min(years.length - 1, state.yearIndex + direction));
+            if (nextIndex === state.yearIndex) {
+                setVisualizationAction(direction > 0 ? "已经是最后一年" : "已经是第一年");
+                return false;
+            }
+            state.yearIndex = nextIndex;
+            setVisualizationAction(`${source}：切换到 ${years[state.yearIndex]}`);
+            renderChart();
+            return true;
+        }
+
+        function highlightCountry(country, source = "控制命令") {
+            const match = dataset.find(d => d.country.toLowerCase() === country.toLowerCase());
+            if (!match) return false;
+
+            state.selectedCountry = match.country;
+            if (state.region !== "All" && state.region !== match.region) {
+                state.region = match.region;
+            }
+            setVisualizationAction(`${source}：高亮 ${match.country}`);
+            renderChart();
+            return true;
+        }
+
+        function resetVisualization(source = "控制命令") {
+            state.yearIndex = 0;
+            state.region = "All";
+            state.selectedCountry = null;
+            state.gazeTarget = null;
+            setVisualizationAction(`${source}：已重置`);
+            renderChart();
+        }
+
+        function showDetails(source = "控制命令") {
+            const selected = dataset.find(d => d.country === state.selectedCountry);
+            const detail = selected
+                ? `${selected.country} 在 ${years[state.yearIndex]} 的值为 ${selected.values[state.yearIndex]}`
+                : "请先点击、高亮或注视一个柱子";
+            setVisualizationAction(`${source}：${detail}`);
+            return detail;
+        }
+
+        function confirmSelection(source = "控制命令") {
+            const target = state.gazeTarget || state.selectedCountry;
+            if (!target) {
+                setVisualizationAction(`${source}：没有可确认的目标`);
+                return false;
+            }
+            highlightCountry(target, source);
+            setVisualizationAction(`${source}：已确认 ${target}`);
+            return true;
+        }
+
+        d3.select("#region-select").on("change", function () {
+            filterRegion(this.value, "下拉菜单");
+        });
+        d3.select("#previous-button").on("click", () => moveTimeStep(-1, "按钮"));
+        d3.select("#next-button").on("click", () => moveTimeStep(1, "按钮"));
+        d3.select("#reset-button").on("click", () => resetVisualization("按钮"));
+
+        renderChart();
+
+        // =====================================================================
+        // Task 1：检查浏览器是否提供 Web Speech API。
+        // =====================================================================
+
+        const SpeechRecognition =
+            window.SpeechRecognition || window.webkitSpeechRecognition;
+        const voiceButton = document.getElementById("voice-button");
+        const voiceStopButton = document.getElementById("voice-stop-button");
+        let recognition = null;
+
+        function setVoiceFeedback({ status, heard, action }) {
+            if (status !== undefined) d3.select("#voice-status").text(status);
+            if (heard !== undefined) d3.select("#voice-heard").text(heard);
+            if (action !== undefined) d3.select("#voice-action").text(action);
+        }
+
+        if (SpeechRecognition) {
+            d3.select("#voice-support").text("支持 Web Speech API");
+            recognition = new SpeechRecognition();
+            recognition.lang = "en-US";
+            recognition.continuous = false;
+            recognition.interimResults = false;
+        } else {
+            d3.select("#voice-support").text("不支持；请使用文本模拟");
+            voiceButton.disabled = true;
+        }
+
+        // =====================================================================
+        // Task 2：只在用户主动点击按钮后启动麦克风。
+        // =====================================================================
+
+        voiceButton.addEventListener("click", () => {
+            if (!recognition) return;
+            try {
+                recognition.start();
+                setVoiceFeedback({ status: "正在请求/聆听…", heard: "—", action: "等待命令" });
+            } catch (error) {
+                setVoiceFeedback({ status: "无法启动", action: error.message });
+            }
+        });
+
+        voiceStopButton.addEventListener("click", () => {
+            if (recognition) recognition.stop();
+            setVoiceFeedback({ status: "已停止" });
+        });
+
+        // =====================================================================
+        // Task 3：读取语音结果，转换为小写并去掉首尾空格。
+        // =====================================================================
+
+        if (recognition) {
+            recognition.onstart = () => setVoiceFeedback({ status: "Listening…" });
+
+            recognition.onresult = event => {
+                const transcript = event.results[0][0].transcript.toLowerCase().trim();
+                setVoiceFeedback({ status: "识别完成", heard: `“${transcript}”` });
+                handleVoiceCommand(transcript);
+            };
+
+            recognition.onerror = event => {
+                setVoiceFeedback({
+                    status: "识别失败",
+                    action: `${event.error}；可改用下方文本模拟`
+                });
+            };
+
+            recognition.onend = () => {
+                if (document.getElementById("voice-status").textContent === "Listening…") {
+                    setVoiceFeedback({ status: "已结束；可再次点击启动" });
+                }
+            };
+        }
+
+        // =====================================================================
+        // Task 4：把语音文字映射为共享可视化函数。
+        // Task 5：每条路径都返回清楚的动作或错误反馈。
+        // =====================================================================
+
+        function handleVoiceCommand(command) {
+            let action = "";
+
+            if (command.includes("reset")) {
+                resetVisualization("语音");
+                action = "Reset visualization";
+            } else if (/show\s+asia/.test(command)) {
+                filterRegion("Asia", "语音");
+                action = "Showing Asia";
+            } else if (/show\s+europe/.test(command)) {
+                filterRegion("Europe", "语音");
+                action = "Showing Europe";
+            } else if (/show\s+(america|americas)/.test(command)) {
+                filterRegion("Americas", "语音");
+                action = "Showing Americas";
+            } else if (/\b(next|forward)\b/.test(command)) {
+                moveTimeStep(1, "语音");
+                action = "Next time step";
+            } else if (/\b(previous|back)\b/.test(command)) {
+                moveTimeStep(-1, "语音");
+                action = "Previous time step";
+            } else if (/\bselect\b/.test(command)) {
+                action = confirmSelection("语音确认")
+                    ? "Selection confirmed"
+                    : "No target to confirm";
+            } else if (command.startsWith("highlight ")) {
+                const requested = command.replace(/^highlight\s+/, "");
+                const match = dataset.find(d => d.country.toLowerCase() === requested);
+                action = match && highlightCountry(match.country, "语音")
+                    ? `Highlighting ${match.country}`
+                    : `Unknown country: ${requested}`;
+            } else {
+                action = "未识别。请尝试：show asia / highlight japan / next / reset";
+            }
+
+            setVoiceFeedback({ action });
+        }
+
+        document.getElementById("voice-form").addEventListener("submit", event => {
+            event.preventDefault();
+            const command = document.getElementById("voice-input").value.toLowerCase().trim();
+            setVoiceFeedback({ status: "文本模拟", heard: `“${command}”` });
+            handleVoiceCommand(command);
+        });
+
+        // =====================================================================
+        // Task 6：通过 getUserMedia 显式启动/停止摄像头。
+        // =====================================================================
+
+        const video = document.getElementById("camera");
+        const overlay = document.getElementById("camera-overlay");
+        const overlayContext = overlay.getContext("2d");
+        let cameraStream = null;
+        let gestureRecognizer = null;
+        let gestureAnimationFrame = null;
+        let lastVideoTime = -1;
+
+        async function startGestureCamera() {
+            if (!navigator.mediaDevices?.getUserMedia) {
+                d3.select("#camera-status").text("浏览器不支持 getUserMedia");
+                return;
+            }
+
+            // 两个库同时占用相机会造成混淆，因此启动手势前先停止视线模式。
+            if (gazeRunning || gazeStarting) await stopGazeTracking();
+
+            try {
+                d3.select("#camera-status").text("正在请求权限…");
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
+                    audio: false
+                });
+                video.srcObject = cameraStream;
+                await video.play();
+                document.getElementById("camera-placeholder").style.display = "none";
+                d3.select("#camera-status").text("运行中");
+
+                await createGestureRecognizer();
+                predictGestures();
+            } catch (error) {
+                d3.select("#camera-status").text(`启动失败：${error.message}`);
+            }
+        }
+
+        function stopGestureCamera() {
+            if (gestureAnimationFrame) cancelAnimationFrame(gestureAnimationFrame);
+            gestureAnimationFrame = null;
+
+            if (cameraStream) {
+                // 关键隐私步骤：停止每一条 track，浏览器摄像头指示灯才会关闭。
+                cameraStream.getTracks().forEach(track => track.stop());
+            }
+            cameraStream = null;
+            video.srcObject = null;
+            overlayContext.clearRect(0, 0, overlay.width, overlay.height);
+            document.getElementById("camera-placeholder").style.display = "grid";
+            d3.select("#camera-status").text("已停止");
+            d3.select("#gesture-detected").text("—");
+        }
+
+        document.getElementById("camera-start-button").addEventListener("click", startGestureCamera);
+        document.getElementById("camera-stop-button").addEventListener("click", stopGestureCamera);
+
+        // =====================================================================
+        // Task 7：加载 MediaPipe Gesture Recognizer 并处理摄像头帧。
+        // =====================================================================
+
+        async function createGestureRecognizer() {
+            if (gestureRecognizer) return;
+            d3.select("#model-status").text("正在下载模型…");
+
+            const vision = await FilesetResolver.forVisionTasks(
+                "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
+            );
+
+            gestureRecognizer = await GestureRecognizer.createFromOptions(vision, {
+                baseOptions: {
+                    modelAssetPath:
+                        "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task",
+                    delegate: "GPU"
+                },
+                runningMode: "VIDEO",
+                numHands: 1
+            });
+
+            d3.select("#model-status").text("MediaPipe 已就绪");
+        }
+
+        async function predictGestures() {
+            if (!cameraStream || !gestureRecognizer) return;
+
+            if (video.readyState >= 2 && video.currentTime !== lastVideoTime) {
+                lastVideoTime = video.currentTime;
+                const now = performance.now();
+                const result = gestureRecognizer.recognizeForVideo(video, now);
+                processGestureResult(result, now);
+            }
+
+            gestureAnimationFrame = requestAnimationFrame(predictGestures);
+        }
+
+        const handConnections = [
+            [0,1],[1,2],[2,3],[3,4], [0,5],[5,6],[6,7],[7,8],
+            [5,9],[9,10],[10,11],[11,12], [9,13],[13,14],[14,15],[15,16],
+            [13,17],[17,18],[18,19],[19,20],[0,17]
+        ];
+
+        function drawHandLandmarks(landmarks) {
+            overlayContext.clearRect(0, 0, overlay.width, overlay.height);
+            if (!landmarks) return;
+
+            overlayContext.lineWidth = 3;
+            overlayContext.strokeStyle = "#5eead4";
+            overlayContext.fillStyle = "#fbbf24";
+
+            handConnections.forEach(([start, end]) => {
+                const a = landmarks[start];
+                const b = landmarks[end];
+                overlayContext.beginPath();
+                overlayContext.moveTo(a.x * overlay.width, a.y * overlay.height);
+                overlayContext.lineTo(b.x * overlay.width, b.y * overlay.height);
+                overlayContext.stroke();
+            });
+
+            landmarks.forEach(point => {
+                overlayContext.beginPath();
+                overlayContext.arc(point.x * overlay.width, point.y * overlay.height, 4, 0, Math.PI * 2);
+                overlayContext.fill();
+            });
+        }
+
+        // =====================================================================
+        // Task 8：小型词汇。静态手势由模型提供；Swipe 由腕部横向移动估算。
+        // =====================================================================
+
+        let wristHistory = [];
+        let lastObservedGesture = null;
+
+        function detectSwipe(landmarks, now) {
+            if (!landmarks) {
+                wristHistory = [];
+                return null;
+            }
+
+            // 视频画面是镜像的，所以用 1 - x 表示用户在屏幕中看到的方向。
+            wristHistory.push({ x: 1 - landmarks[0].x, time: now });
+            wristHistory = wristHistory.filter(point => now - point.time <= 550);
+
+            if (wristHistory.length < 4) return null;
+            const distance = wristHistory.at(-1).x - wristHistory[0].x;
+            if (Math.abs(distance) < 0.20) return null;
+
+            wristHistory = [];
+            return distance > 0 ? "Swipe_Right" : "Swipe_Left";
+        }
+
+        function processGestureResult(result, now) {
+            const landmarks = result.landmarks?.[0];
+            drawHandLandmarks(landmarks);
+
+            if (!landmarks) {
+                lastObservedGesture = null;
+                wristHistory = [];
+                d3.select("#gesture-detected").text("未检测到手");
+                return;
+            }
+
+            const swipe = detectSwipe(landmarks, now);
+            const topGesture = result.gestures?.[0]?.[0];
+            const staticGesture = topGesture?.categoryName || "None";
+            const score = topGesture?.score || 0;
+
+            if (swipe) {
+                lastObservedGesture = swipe;
+                triggerGesture(swipe, "摄像头");
+                return;
+            }
+
+            d3.select("#gesture-detected")
+                .text(`${staticGesture} · ${(score * 100).toFixed(0)}%`);
+
+            // 除冷却外再检查“标签变化”，避免每一帧都请求执行相同命令。
+            if (score >= 0.60 && staticGesture !== "None" && staticGesture !== lastObservedGesture) {
+                lastObservedGesture = staticGesture;
+                triggerGesture(staticGesture, "摄像头");
+            }
+        }
+
+        // =====================================================================
+        // Task 9：将少量手势标签映射到共享可视化动作。
+        // =====================================================================
+
+        function handleGesture(gesture) {
+            let action;
+
+            if (gesture === "Open_Palm") {
+                resetVisualization("手势");
+                action = "Reset visualization";
+            } else if (gesture === "Swipe_Left") {
+                moveTimeStep(-1, "手势");
+                action = "Previous time step";
+            } else if (gesture === "Swipe_Right") {
+                moveTimeStep(1, "手势");
+                action = "Next time step";
+            } else if (gesture === "Pointing_Up") {
+                action = showDetails("手势");
+            } else if (gesture === "Thumb_Up") {
+                action = confirmSelection("手势确认") ? "Selection confirmed" : "No target to confirm";
+            } else {
+                action = `${gesture} 暂未映射动作`;
+            }
+
+            d3.select("#gesture-action").text(action);
+        }
+
+        // =====================================================================
+        // Task 10：冷却阻止同一个手势在连续视频帧里反复触发。
+        // =====================================================================
+
+        let lastGestureTime = 0;
+        const GESTURE_COOLDOWN = 1000;
+
+        function triggerGesture(gesture, source = "模拟按钮") {
+            const now = Date.now();
+            const remaining = GESTURE_COOLDOWN - (now - lastGestureTime);
+
+            d3.select("#gesture-detected").text(`${gesture}（${source}）`);
+
+            if (remaining > 0) {
+                d3.select("#cooldown-status").text(`忽略重复输入，还需 ${remaining} ms`);
+                return;
+            }
+
+            lastGestureTime = now;
+            d3.select("#cooldown-status").text("命令已触发；冷却 1000 ms");
+            handleGesture(gesture);
+
+            window.setTimeout(() => {
+                d3.select("#cooldown-status").text("就绪");
+            }, GESTURE_COOLDOWN);
+        }
+
+        document.querySelectorAll("[data-gesture]").forEach(button => {
+            button.addEventListener("click", () => triggerGesture(button.dataset.gesture));
+        });
+
+        // =====================================================================
+        // Task 11：WebGazer 只用于近似定位；启动前不请求摄像头。
+        // =====================================================================
+
+        let gazeRunning = false;
+        let gazeStarting = false;
+        let webGazerLoadPromise = null;
+        let webGazerApi = null;
+        const gazeCursor = document.getElementById("gaze-cursor");
+
+        /*
+         * 原版 WebGazer 3.5.3 的浏览器 bundle 在部分新版 Chromium 环境中会在
+         * begin() 内部抛出压缩后的 “t is not a function”。这里使用 API 兼容的
+         * TypeScript 重写版，仍然保留 WebGazer 的 TFFacemesh + ridge 工作流程。
+         */
+        const WEBGAZER_VERSION = "0.2.0";
+        const WEBGAZER_ENGINE_NAME = "WebGazer TS";
+        const WEBGAZER_MODULE_URL =
+            `https://cdn.jsdelivr.net/npm/@webgazer-ts/core@${WEBGAZER_VERSION}/+esm`;
+
+        function loadWebGazer() {
+            if (hasRequiredWebGazerApi(webGazerApi)) {
+                return Promise.resolve(webGazerApi);
+            }
+            if (webGazerLoadPromise) return webGazerLoadPromise;
+
+            // 动态 import 只加载代码；只有后面的 begin() 才会请求摄像头。
+            webGazerLoadPromise = import(WEBGAZER_MODULE_URL).then(module => {
+                const candidate = module.default || module.webgazer || module;
+                if (!hasRequiredWebGazerApi(candidate)) {
+                    throw new Error("模块已加载，但缺少 begin / end / setGazeListener API");
+                }
+
+                webGazerApi = candidate;
+                return webGazerApi;
+            }).catch(error => {
+                // 加载失败后允许用户再次点击重试，而不是永久缓存 rejected Promise。
+                webGazerLoadPromise = null;
+                throw error;
+            });
+            return webGazerLoadPromise;
+        }
+
+        function hasRequiredWebGazerApi(api) {
+            return Boolean(
+                api &&
+                typeof api.begin === "function" &&
+                typeof api.end === "function" &&
+                typeof api.setGazeListener === "function"
+            );
+        }
+
+        function callOptionalWebGazerMethod(api, methodName, ...args) {
+            if (typeof api?.[methodName] !== "function") return false;
+
+            try {
+                api[methodName](...args);
+                return true;
+            } catch (error) {
+                // 辅助显示功能失败不应阻止核心 gaze listener 工作。
+                console.warn(`WebGazer optional method ${methodName}() failed:`, error);
+                return false;
+            }
+        }
+
+        async function startGazeTracking() {
+            if (gazeRunning || gazeStarting) return;
+
+            if (!window.isSecureContext) {
+                d3.select("#gaze-status")
+                    .text("需要 localhost 或 HTTPS；请勿直接用 file:// 打开");
+                return;
+            }
+
+            // 避免手势和视线两个流程同时争用摄像头。
+            if (cameraStream) stopGestureCamera();
+
+            gazeStarting = true;
+            const startButton = document.getElementById("gaze-start-button");
+            startButton.disabled = true;
+            let startStage = "加载脚本";
+
+            try {
+                d3.select("#gaze-status")
+                    .text(`正在加载 ${WEBGAZER_ENGINE_NAME} ${WEBGAZER_VERSION}…`);
+                const webgazer = await loadWebGazer();
+
+                startStage = "注册 gaze listener";
+                webgazer.setGazeListener(data => {
+                    if (!data || !gazeRunning) return;
+                    processGazePoint(data.x, data.y, "WebGazer");
+                });
+
+                // 这些是增强功能，不是启动的必要条件。不同版本缺少某个方法时直接跳过。
+                callOptionalWebGazerMethod(webgazer, "setTracker", "TFFacemesh");
+                callOptionalWebGazerMethod(webgazer, "setRegression", "ridge");
+                callOptionalWebGazerMethod(webgazer, "saveDataAcrossSessions", true);
+                callOptionalWebGazerMethod(webgazer, "applyKalmanFilter", true);
+                callOptionalWebGazerMethod(webgazer, "showPredictionPoints", false);
+                callOptionalWebGazerMethod(webgazer, "showFaceOverlay", true);
+                callOptionalWebGazerMethod(webgazer, "showFaceFeedbackBox", true);
+
+                // 新版使用 showVideoPreview，旧版文档中也出现过 showVideo；兼容两者。
+                if (!callOptionalWebGazerMethod(webgazer, "showVideoPreview", true)) {
+                    callOptionalWebGazerMethod(webgazer, "showVideo", true);
+                }
+
+                startStage = "begin() 初始化摄像头与人脸模型";
+                d3.select("#gaze-status").text("正在请求摄像头权限并加载人脸模型…");
+
+                // begin() 期间可能已经产生预测，因此要先打开回调开关。
+                gazeRunning = true;
+                await Promise.resolve(webgazer.begin());
+
+                // TypeScript 版本默认不自动保存鼠标校准点，需要显式打开监听。
+                callOptionalWebGazerMethod(webgazer, "addMouseEventListeners");
+
+                d3.select("#gaze-status")
+                    .text(`${WEBGAZER_ENGINE_NAME} ${WEBGAZER_VERSION} 运行中；请注视并点击不同位置校准`);
+            } catch (error) {
+                gazeRunning = false;
+                const message = error instanceof Error ? error.message : String(error);
+
+                // begin() 可能已经取得部分资源；失败时也要尝试释放摄像头。
+                if (hasRequiredWebGazerApi(webGazerApi)) {
+                    callOptionalWebGazerMethod(webGazerApi, "removeMouseEventListeners");
+                    callOptionalWebGazerMethod(webGazerApi, "clearGazeListener");
+                    try {
+                        await Promise.resolve(webGazerApi.end());
+                    } catch (cleanupError) {
+                        console.warn("WebGazer cleanup after failed start failed:", cleanupError);
+                    }
+                }
+
+                d3.select("#gaze-status")
+                    .text(`${startStage}失败：${message}；仍可使用鼠标模拟`);
+            } finally {
+                gazeStarting = false;
+                startButton.disabled = false;
+            }
+        }
+
+        async function stopGazeTracking() {
+            gazeRunning = false;
+            gazeStarting = false;
+
+            if (hasRequiredWebGazerApi(webGazerApi)) {
+                callOptionalWebGazerMethod(webGazerApi, "removeMouseEventListeners");
+                callOptionalWebGazerMethod(webGazerApi, "clearGazeListener");
+                try {
+                    await Promise.resolve(webGazerApi.end());
+                } catch (error) {
+                    console.warn("WebGazer end() failed:", error);
+                }
+            }
+
+            gazeCursor.style.display = "none";
+            clearDwellTarget();
+            d3.select("#gaze-status").text("已停止");
+        }
+
+        document.getElementById("gaze-start-button").addEventListener("click", startGazeTracking);
+        document.getElementById("gaze-stop-button").addEventListener("click", stopGazeTracking);
+
+        // =====================================================================
+        // Task 12：用可见圆点显示估计坐标，让识别误差不再隐藏。
+        // =====================================================================
+
+        function updateGazeCursor(x, y) {
+            gazeCursor.style.display = "block";
+            gazeCursor.style.left = `${x}px`;
+            gazeCursor.style.top = `${y}px`;
+            d3.select("#gaze-position").text(`x=${Math.round(x)}, y=${Math.round(y)}`);
+        }
+
+        // =====================================================================
+        // Task 13：Dwell 800 ms 后才高亮，避免“看一眼就误选”的 Midas Touch。
+        // =====================================================================
+
+        const DWELL_TIME = 800;
+        let dwellCountry = null;
+        let dwellStartedAt = 0;
+        let dwellTriggered = false;
+
+        function clearDwellTarget() {
+            dwellCountry = null;
+            dwellStartedAt = 0;
+            dwellTriggered = false;
+            state.gazeTarget = null;
+            d3.select("#gaze-target").text("—");
+            d3.select("#dwell-progress").style("width", "0%");
+            d3.selectAll("rect.bar").classed("gaze-target", false);
+        }
+
+        function updateDwellTarget(x, y) {
+            const element = document.elementFromPoint(x, y);
+            const bar = element?.closest?.("rect.bar");
+            const country = bar?.dataset.country || null;
+            const now = performance.now();
+
+            if (!country) {
+                clearDwellTarget();
+                return;
+            }
+
+            if (country !== dwellCountry) {
+                dwellCountry = country;
+                dwellStartedAt = now;
+                dwellTriggered = false;
+                state.gazeTarget = country;
+                d3.select("#gaze-target").text(country);
+                d3.selectAll("rect.bar").classed("gaze-target", d => d.country === country);
+            }
+
+            const elapsed = now - dwellStartedAt;
+            const percent = Math.min(100, (elapsed / DWELL_TIME) * 100);
+            d3.select("#dwell-progress").style("width", `${percent}%`);
+
+            if (elapsed >= DWELL_TIME && !dwellTriggered) {
+                dwellTriggered = true;
+                highlightCountry(country, "视线停留");
+                d3.select("#gaze-action").text(`停留 800 ms：高亮 ${country}`);
+            }
+        }
+
+        function processGazePoint(x, y, source) {
+            updateGazeCursor(x, y);
+            updateDwellTarget(x, y);
+            d3.select("#gaze-status").text(source === "WebGazer" ? "WebGazer 运行中" : "鼠标模拟中");
+        }
+
+        // 鼠标模拟不会请求摄像头，可用于稳定地观察 Task 12–13 的逻辑。
+        document.getElementById("chart-wrap").addEventListener("pointermove", event => {
+            if (!document.getElementById("mouse-gaze-toggle").checked || gazeRunning) return;
+            processGazePoint(event.clientX, event.clientY, "鼠标模拟");
+        });
+
+        document.getElementById("chart-wrap").addEventListener("pointerleave", () => {
+            if (!gazeRunning) {
+                gazeCursor.style.display = "none";
+                clearDwellTarget();
+            }
+        });
+
+        // 离开页面时关闭自己创建的 camera stream。
+        window.addEventListener("beforeunload", () => {
+            if (cameraStream) cameraStream.getTracks().forEach(track => track.stop());
+        });
+    </script>
+</body>
+</html>

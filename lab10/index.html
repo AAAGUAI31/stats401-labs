@@ -1,1 +1,200 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Lab 10</title><link rel="stylesheet" href="../css/style.css"></head><body><main class="page-shell"><section class="card"><h1>Lab 10</h1><p>Lab 10 will be added here.</p><a href="../index.html">Back to home</a></section></main></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 10 Assignment - Multimodal City Explorer</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="assignment10.css">
+</head>
+<body class="lab10-assignment">
+    <main class="page-shell">
+        <header class="page-header lab10-hero">
+            <p class="eyebrow">STATS 401 · LAB 10 ASSIGNMENT</p>
+            <h1>Multimodal City Explorer</h1>
+            <p>
+                An extension of the Lab 2 multivariate scatterplot using voice commands
+                and webcam-based hand gestures for selection and highlighting.
+            </p>
+        </header>
+
+        <nav class="lab-nav" aria-label="Lab navigation">
+            <a href="../lab1/index.html">Lab 1</a>
+            <a href="../lab2/index.html">Lab 2</a>
+            <a href="../lab3/index.html">Lab 3</a>
+            <a href="../lab4/index.html">Lab 4</a>
+            <a href="../lab5/index.html">Lab 5</a>
+            <a href="../lab6/index.html">Lab 6</a>
+            <a href="../lab7/index.html">Lab 7</a>
+            <a href="../lab8/index.html">Lab 8</a>
+            <a href="../lab9/index.html">Lab 9</a>
+            <a class="is-current" href="index.html" aria-current="page">Lab 10</a>
+        </nav>
+
+        <section class="card intro-card" aria-labelledby="interaction-title">
+            <div class="intro-copy">
+                <p class="section-kicker">Novel interaction</p>
+                <h2 id="interaction-title">Explore by region and development level</h2>
+                <p class="intro-description">
+                    Combine two natural inputs to focus the Lab 2 scatterplot while keeping
+                    the full dataset visible for context.
+                </p>
+            </div>
+
+            <div class="interaction-summary" aria-label="Novel interaction mappings">
+                <div class="interaction-summary-item voice-summary">
+                    <span class="summary-label">Voice</span>
+                    <strong>“Show North / South / East / West”</strong>
+                    <span>Select and highlight a region by color.</span>
+                </div>
+                <div class="interaction-summary-item gesture-summary">
+                    <span class="summary-label">Hand gesture</span>
+                    <strong>Thumb Down / Thumb Up</strong>
+                    <span>Move to a larger or smaller Development size level.</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="card" aria-labelledby="visualization-title">
+            <div class="section-heading">
+                <div>
+                    <p class="section-kicker">Reused Lab 2 visualization</p>
+                    <h2 id="visualization-title">City Population and Temperature</h2>
+                    <p class="encoding-note">
+                        Population → x-position · Temperature → y-position ·
+                        Development level → size · Region → color
+                    </p>
+                </div>
+                <button id="reset-button" class="primary-button" type="button">Reset all selections</button>
+            </div>
+
+            <div class="visualization-layout">
+                <div>
+                    <div id="chart" class="chart-container" aria-label="City multivariate scatterplot">
+                        <p id="chart-loading" class="chart-loading">Loading city data…</p>
+                    </div>
+                    <div id="tooltip" class="tooltip lab10-tooltip" role="status" aria-live="polite"></div>
+                    <p id="chart-error" class="error" hidden></p>
+                </div>
+
+                <aside class="selection-panel" aria-labelledby="selection-title">
+                    <div class="selection-overview">
+                        <h3 id="selection-title">Current selection</h3>
+                        <dl class="selection-status" aria-live="polite">
+                            <div>
+                                <dt>Development</dt>
+                                <dd id="development-status">All</dd>
+                            </div>
+                            <div>
+                                <dt>Region</dt>
+                                <dd id="region-status">All</dd>
+                            </div>
+                            <div>
+                                <dt>Matching cities</dt>
+                                <dd id="match-count">12 of 12</dd>
+                            </div>
+                        </dl>
+                        <p id="selection-message" class="selection-message" role="status" aria-live="polite">
+                            All cities are visible.
+                        </p>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <div class="interaction-grid">
+            <section class="card interaction-card" aria-labelledby="voice-title">
+                <p class="section-kicker">Voice interaction</p>
+                <h2 id="voice-title">Select a region by speaking</h2>
+                <p>
+                    Try “Show North,” “Show South,” “Show East,” “Show West,”
+                    “Show all regions,” or “Reset.”
+                </p>
+
+                <div class="button-row">
+                    <button id="voice-start-button" class="primary-button" type="button">Start voice control</button>
+                    <button id="voice-stop-button" class="control-button" type="button">Stop listening</button>
+                </div>
+
+                <div class="feedback-panel" aria-live="polite">
+                    <p><strong>Support:</strong> <span id="voice-support">Checking…</span></p>
+                    <p><strong>Status:</strong> <span id="voice-status">Inactive</span></p>
+                    <p><strong>Heard:</strong> <span id="voice-heard">—</span></p>
+                    <p><strong>Action:</strong> <span id="voice-action">—</span></p>
+                </div>
+            </section>
+
+            <section class="card interaction-card" aria-labelledby="gesture-title">
+                <p class="section-kicker">Camera-based hand gesture</p>
+                <h2 id="gesture-title">Step through development levels</h2>
+                <p>
+                    Show a thumb gesture, then relax your hand before the next command.
+                    A cooldown prevents a held gesture from changing several levels at once.
+                </p>
+
+                <div class="camera-stage">
+                    <video id="camera" autoplay playsinline muted aria-label="Webcam preview"></video>
+                    <canvas id="camera-overlay" width="640" height="480" aria-hidden="true"></canvas>
+                    <p id="camera-placeholder">Camera is off</p>
+                </div>
+
+                <div class="button-row">
+                    <button id="camera-start-button" class="primary-button" type="button">Start camera</button>
+                    <button id="camera-stop-button" class="control-button danger-button" type="button">Stop camera</button>
+                </div>
+
+                <div class="feedback-panel" aria-live="polite">
+                    <p><strong>Camera:</strong> <span id="camera-status">Inactive</span></p>
+                    <p><strong>Model:</strong> <span id="model-status">Not loaded</span></p>
+                    <p><strong>Detected:</strong> <span id="gesture-detected">—</span></p>
+                    <p><strong>Action:</strong> <span id="gesture-action">—</span></p>
+                </div>
+            </section>
+        </div>
+
+        <section class="card instruction-card" aria-labelledby="instructions-title">
+            <p class="section-kicker">How to use the interaction</p>
+            <h2 id="instructions-title">Interaction guide</h2>
+            <ol class="instruction-list">
+                <li>Click a region or development legend item to select it; click the selected item again to clear that filter.</li>
+                <li>Press <strong>Start voice control</strong>, allow microphone access, and speak one region command.</li>
+                <li>Press <strong>Start camera</strong>, allow camera access, and wait until the MediaPipe model is ready.</li>
+                <li>Show Thumb Down to move from All → Low → Medium → High. Show Thumb Up to move from All → High → Medium → Low.</li>
+                <li>When both a development level and a region are selected, only cities matching both remain prominent.</li>
+            </ol>
+        </section>
+
+        <section class="card justification" aria-labelledby="reflection-title">
+            <p class="section-kicker">Design reflection</p>
+            <h2 id="reflection-title">Why these interactions fit the task</h2>
+            <p>
+                This project extends the multivariate city scatterplot from Lab 2. The original
+                visualization maps population to horizontal position, average temperature to
+                vertical position, region to color, and development level to circle size. I added
+                two novel input modalities. Voice commands such as “Show North” highlight a
+                geographic region, while Thumb Down moves to a larger development level and Thumb
+                Up moves to a smaller level. When both controls are active, only cities matching
+                both selections remain prominent, which supports focused comparison without
+                removing context. Visible status messages show the detected command, gesture, and
+                resulting selection. The current-selection summary keeps both filters and the match
+                count visible beside the chart. The chart legends also act as direct filters, which
+                provides a precise alternative when recognition is unavailable; clicking an active
+                legend item again clears that dimension. These mappings are easy to remember because
+                speech names the desired region directly and the gestures move through an ordered size scale. Limitations
+                include browser-dependent speech recognition (sometime the speech recognition fails to distingish speech, especially for show south, which is easily be recognized as show sauce or show source), camera permissions, hand
+                orientation, and occasional gesture misclassification. A cooldown prevents a held
+                gesture from changing several levels at once.
+            </p>
+        </section>
+
+        <p class="page-links">
+            <a class="back-link" href="task1-13-demo.html">View the Task 1–13 learning demo</a>
+            <a class="back-link" href="../lab2/index.html">View the original Lab 2 visualization</a>
+            <a class="back-link" href="../index.html">Back to home</a>
+        </p>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script type="module" src="assignment10.js"></script>
+</body>
+</html>
